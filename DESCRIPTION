@@ -1,0 +1,13 @@
+Package: FCharmony
+Title: Functional Connectivity Harmonization
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Andrew",
+           family = "Chen",
+           role = c("aut", "cre"),
+           email = "andrewac@pennmedicine.upenn.edu",
+           comment = c(ORCID = "0000-0002-5027-6422"))
+Description: Methods for harmonization of functional connectivity measures, currently WIP
+License: Artistic License 2.0
+Encoding: UTF-8
+LazyData: true
