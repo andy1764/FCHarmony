@@ -4,16 +4,41 @@
 \alias{cpcharmony}
 \title{Harmonization using Common Principal Components}
 \usage{
-cpcharmony(dat, bat)
+cpcharmony(
+  dat,
+  bat,
+  cpc.k,
+  mod = NULL,
+  method = "ComBat",
+  cpc.method = "stepwise",
+  cpc.cap.oc = FALSE
+)
 }
 \arguments{
-\item{dat}{array of covariance matrices of dimension \eqn{(p \times p \times
-N)}}
+\item{dat}{an array of covariance matrices of dimension \eqn{(p \times p \times N)}}
 
-\item{bat}{batch labels as length \eqn{n} vector}
+\item{bat}{a vector of batch labels as length \eqn{n} vector}
+
+\item{cpc.k}{numeric, number of common principal components to harmonize}
+
+\item{mod}{a matrix of covariates to preserve during harmonization}
+
+\item{method}{character, method for harmonization, either "likelihood",
+"log-Combat", or "ComBat", currently only ComBat supported. Default is
+"ComBat"}
+
+\item{cpc.method}{character, estimation method for common principal
+components, one of "stepwise", "Flury", or "CAP". Default is "stepwise".}
+
+\item{cpc.cap.oc}{logical, only used if \code{cpc.method = "CAP"}, if
+\code{TRUE} imposes orthogonal constraint when identifiying higher-order PCs.
+Default is \code{FALSE}}
 }
 \value{
-
+\code{cpcharmony} returns a list containing the following components:
+\item{dat.out}{harmonized data as an array of input dimension}
+\item{cpcs}{CPC analysis output list}
+\item{cpc.harmony}{harmonization method output}
 }
 \description{
 Harmonization using Common Principal Components
