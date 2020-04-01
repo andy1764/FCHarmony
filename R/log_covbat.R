@@ -12,6 +12,7 @@
 #' @return
 #'
 #' @import CovBat
+#' @importFrom expm expm logm
 #' @export
 #'
 #' @examples
@@ -27,8 +28,9 @@ log_covbat <- function(x, # array of fc matrices, roi x roi x nsubj
   n <- dim(x)[3] # store number of obs
   logx <- array(dim = dim(x))
   for (i in 1:n) {
-    if (input.pd) {x[,,i] <- as.numeric(nearPD(x[,,i])$mat)}
-    logx[,,i] <- logm(x[,,i])
+    if (input.pd) {
+      x[,,i] <- as.numeric(nearPD(x[,,i])$mat)}
+    logx[,,i] <- logm(x[,,i], "eigen")
   }
 
   # collapse into vectors
@@ -59,7 +61,8 @@ log_covbat <- function(x, # array of fc matrices, roi x roi x nsubj
   for (i in 1:n) {
     if (pc.sym) {
       est_mat[,,i][lower.tri(est_mat[,,i], diag = TRUE)] <- est_covbat[i,]
-      est_mat[,,i] <- est_mat[,,i] + t(est_mat[,,i]) - diag(diag(est_mat[,,i]))
+      est_mat[,,i] <- est_mat[,,i] + t(est_mat[,,i])
+      diag(est_mat[,,i]) <- diag(est_mat[,,i])/2
     } else {
       est_mat[,,i] <- matrix(est_covbat[i,], dim(x[,,1]))
     }

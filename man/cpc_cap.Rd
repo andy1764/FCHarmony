@@ -4,14 +4,18 @@
 \alias{cpc_cap}
 \title{Title}
 \usage{
-cpc_cap(dat, bat, mod)
+cpc_cap(dat, bat, mod, k = 1)
 }
 \arguments{
-\item{dat}{an array of covariance matrices of dimension \eqn{(p \times p \times N)}}
+\item{dat}{an array of covariance matrices of dimension
+\eqn{(p \times p \times N)}}
 
 \item{bat}{a vector of batch labels as length \eqn{n} vector}
 
 \item{mod}{a matrix of covariates to preserve during harmonization}
+
+\item{k}{numeric, number of covariate-assisted principal components to
+identify}
 }
 \value{
 

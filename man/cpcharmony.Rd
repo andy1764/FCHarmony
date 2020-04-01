@@ -9,30 +9,43 @@ cpcharmony(
   bat,
   cpc.k,
   mod = NULL,
-  method = "ComBat",
   cpc.method = "stepwise",
+  err.method = "logPC",
+  method = "ComBat",
+  force.PD = c(FALSE, FALSE),
+  to.corr = c(FALSE, FALSE),
   cpc.cap.oc = FALSE
 )
 }
 \arguments{
-\item{dat}{an array of covariance matrices of dimension \eqn{(p \times p \times N)}}
+\item{dat}{An array of covariance matrices of dimension
+\emph{(p x p x N)}}
 
-\item{bat}{a vector of batch labels as length \eqn{n} vector}
+\item{bat}{A vector of batch labels as length \emph{n} vector}
 
-\item{cpc.k}{numeric, number of common principal components to harmonize}
+\item{cpc.k}{Numeric, number of common principal components to harmonize}
 
-\item{mod}{a matrix of covariates to preserve during harmonization}
+\item{mod}{A matrix of covariates to preserve during harmonization}
 
-\item{method}{character, method for harmonization, either "likelihood",
-"log-Combat", or "ComBat", currently only ComBat supported. Default is
-"ComBat"}
+\item{cpc.method}{Estimation method for common principal components. One of
+"stepwise", "Flury", or "CAP". Otherwise, skips step.}
 
-\item{cpc.method}{character, estimation method for common principal
-components, one of "stepwise", "Flury", or "CAP". Default is "stepwise".}
+\item{err.method}{Harmonization method for error terms. One of "log-CovBat"
+or "fc-Combat"}
 
-\item{cpc.cap.oc}{logical, only used if \code{cpc.method = "CAP"}, if
-\code{TRUE} imposes orthogonal constraint when identifiying higher-order PCs.
-Default is \code{FALSE}}
+\item{method}{Method for harmonization. One of "likelihood", "log-ComBat",
+"ComBat". Currently only ComBat supported.}
+
+\item{force.PD}{Logical vector. First element indicates whether input should
+be forced to be positive definite using \link[Matrix]{nearPD}, second for
+output}
+
+\item{to.corr}{Logical vector. First element indicates whether input should
+be forced to be a correlation matrix using  \link[stats]{cov2cor}, second
+for output}
+
+\item{cpc.cap.oc}{Logical, only used if \code{cpc.method = "CAP"}, if
+\code{TRUE} imposes orthogonal constraint when identifiying higher-order PCs.}
 }
 \value{
 \code{cpcharmony} returns a list containing the following components:

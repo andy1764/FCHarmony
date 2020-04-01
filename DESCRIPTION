@@ -11,9 +11,14 @@ Description: Methods for harmonization of functional connectivity measures, curr
 License: Artistic License 2.0
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 Imports: 
     cpca,
-    CovBat
+    CovBat,
+    expm,
+    Matrix,
+    stats
 Remotes:
     tpepler/cpc
+Suggests: 
+    testthat (>= 2.1.0)
