@@ -6,7 +6,16 @@
 Refer to the 2018 paper for further details:
 \url{https://doi.org/10.1002/hbm.24241}}
 \usage{
-test_yu(raw, out, bat, net.rois, net.cov, p.method = "hochberg")
+test_yu(
+  raw,
+  out,
+  bat,
+  net.rois,
+  net.cov,
+  p.method = "BH",
+  to.corr = TRUE,
+  net.only = TRUE
+)
 }
 \arguments{
 \item{bat}{}

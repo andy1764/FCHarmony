@@ -17,8 +17,11 @@ Imports:
     brainGraph,
     cpca,
     expm,
+    CovTools,
+    igraph,
     Matrix,
-    stats
+    stats,
+    utils
 Remotes:
     tpepler/cpc
 Suggests: 

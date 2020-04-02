@@ -1,7 +1,7 @@
 test_that("FC ComBat can harmonize basic matrices", {
   library(CovBat)
   data(CARDIA)
-  bat <- c(rep(0, 15), rep(1, 15))
+  bat <- factor(c(rep(0, 15), rep(1, 15)))
   out <- cpcharmony(CARDIA, bat, cpc.method = "", err.method = "fc-ComBat")
 
   # comparison to vectorized

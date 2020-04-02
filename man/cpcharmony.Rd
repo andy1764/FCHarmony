@@ -8,10 +8,10 @@ cpcharmony(
   dat,
   bat,
   mod = NULL,
-  cpc.method = "stepwise",
+  cpc.method = c("stepwise", "Flury", "CAP", "None"),
   cpc.k = dim(dat)[1],
-  err.method = "log-CovBat",
-  method = "ComBat",
+  err.method = c("log-CovBat", "log-ComBat", "fc-ComBat", "remove", "None"),
+  method = c("ComBat", "log-ComBat", "None"),
   force.PD = c(FALSE, FALSE),
   to.corr = c(FALSE, FALSE),
   cpc.cap.oc = FALSE

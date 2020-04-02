@@ -10,15 +10,15 @@ test_norms(
   bat,
   tests = c("Original", "Correlation", "Laplacian"),
   metric = "Euclidean",
-  lap.thres = 0.5,
-  lap.gamma = 0
+  lap.thr = 0.25,
+  lap.gam = 0.01
 )
 }
 \arguments{
 \item{bat}{}
 
 \item{metric}{Metric used to calculate distance. Choose from \code{method} in
-\link[shapes]{distcov}}
+\link[shapes]{distcov}.}
 }
 \value{
 

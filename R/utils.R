@@ -20,11 +20,11 @@ logm_eig <- function(x) {
 # get local efficiency, based on code from brainGraph but fixed
 local_eff <- function (g, weights = NULL, use.parallel = TRUE, A = NULL) {
   if (is.null(weights)) {
-    if (is.null(A))
+    if (is.null(A)) {
       A <- as_adj(g, names = FALSE, attr = "weight")
-    weighted <- TRUE
-  }
-  else {
+      weighted <- TRUE
+    }
+  } else {
     A <- as_adj(g, names = FALSE, sparse = FALSE)
     weighted <- NULL
   }

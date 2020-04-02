@@ -7,8 +7,10 @@
 #' @param bat
 #'
 #' @return
-#' @import brainwaver igraph brainGraph
-#' @importFrom stats kruskal.test p.adjust prcomp
+#' @import igraph
+#' @importFrom brainGraph efficiency
+#' @importFrom stats kruskal.test p.adjust prcomp lm
+#' @importFrom Matrix rowSums
 #' @export
 #'
 #' @examples
