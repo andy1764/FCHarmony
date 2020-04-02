@@ -7,10 +7,10 @@
 cpcharmony(
   dat,
   bat,
-  cpc.k,
   mod = NULL,
   cpc.method = "stepwise",
-  err.method = "logPC",
+  cpc.k = dim(dat)[1],
+  err.method = "log-CovBat",
   method = "ComBat",
   force.PD = c(FALSE, FALSE),
   to.corr = c(FALSE, FALSE),
@@ -23,12 +23,12 @@ cpcharmony(
 
 \item{bat}{A vector of batch labels as length \emph{n} vector}
 
-\item{cpc.k}{Numeric, number of common principal components to harmonize}
-
 \item{mod}{A matrix of covariates to preserve during harmonization}
 
 \item{cpc.method}{Estimation method for common principal components. One of
 "stepwise", "Flury", or "CAP". Otherwise, skips step.}
+
+\item{cpc.k}{Numeric, number of common principal components to harmonize}
 
 \item{err.method}{Harmonization method for error terms. One of "log-CovBat"
 or "fc-Combat"}

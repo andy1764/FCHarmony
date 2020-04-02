@@ -12,7 +12,7 @@
 #' @return
 #'
 #' @import CovBat
-#' @importFrom expm expm logm
+#' @importFrom expm expm
 #' @export
 #'
 #' @examples
@@ -30,7 +30,7 @@ log_covbat <- function(x, # array of fc matrices, roi x roi x nsubj
   for (i in 1:n) {
     if (input.pd) {
       x[,,i] <- as.numeric(nearPD(x[,,i])$mat)}
-    logx[,,i] <- logm(x[,,i], "eigen")
+    logx[,,i] <- logm_eig(x[,,i])
   }
 
   # collapse into vectors

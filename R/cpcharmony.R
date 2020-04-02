@@ -29,15 +29,24 @@
 #' @importFrom cpca cpc
 #' @importFrom Matrix nearPD
 #' @importFrom stats cov2cor
+#' @importFrom expm expm
 #' @export
 #'
 #' @examples
 
-cpcharmony <- function(dat, bat, mod = NULL, cpc.method = "stepwise",
-                       cpc.k = dim(dat)[1], err.method = "log-CovBat",
-                       method = "ComBat",
+cpcharmony <- function(dat, bat, mod = NULL,
+                       cpc.method = c("stepwise", "Flury", "CAP", "None"),
+                       cpc.k = dim(dat)[1],
+                       err.method = c("log-CovBat", "log-ComBat", "fc-ComBat",
+                                      "remove", "None"),
+                       method = c("ComBat", "log-ComBat", "None"),
                        force.PD = c(FALSE, FALSE), to.corr = c(FALSE, FALSE),
                        cpc.cap.oc = FALSE) {
+  bat <- droplevels(bat)
+  try(cpc.method <- match.arg(cpc.method))
+  try(err.method <- match.arg(err.method))
+  try(method <- match.arg(method))
+
   p <- dim(dat)[2]
   N <- dim(dat)[3]
 
@@ -84,25 +93,52 @@ cpcharmony <- function(dat, bat, mod = NULL, cpc.method = "stepwise",
   #### Harmonization of error matrices ####
   switch(
     err.method,
-    "log-Covbat" = {
-      dat_err = log_covbat(dat_err, bat, mod = mod)$dat.covbat
+    "log-CovBat" = {
+      err_harmony = log_covbat(dat_err, bat, mod = mod)
+      dat_err = err_harmony$dat.covbat
+    },
+    "log-ComBat" = {
+      # Vectorize matrix log then harmonize element-wise via ComBat
+      dat_err_log <- sapply(seq_along(dat_err[1,1,]),
+                            function(x) logm_eig(dat_err[,,x]),
+                            simplify = "array")
+      err_vec <- t(apply(dat_err_log, 3, function(x) c(x[lower.tri(x)])))
+      err_harmony <- combat_modded(t(err_vec), bat, mod = mod)
+      err_harm_dat <- t(err_harmony$dat.combat)
+      err_out <- array(0, dim = dim(dat_err_log))
+      for (i in 1:N) {
+        diag(err_out[,,i]) <- diag(dat_err_log[,,i])
+        err_out[,,i][lower.tri(err_out[,,i])] <- err_harm_dat[i,]
+        err_out[,,i] <- err_out[,,i] + t(err_out[,,i])
+        err_out[,,i] <- expm(err_out[,,i])
+      }
+      dat_err <- err_out
     },
     "fc-ComBat" =  {
       # Method first implemented by Yu et al. (2018), DOI: 10.1002/hbm.24241
       err_vec <- t(apply(dat_err, 3, function(x) c(x[lower.tri(x)])))
-      err_com <- t(combat_modded(t(err_vec), bat, mod = mod)$dat.combat)
+      err_harmony <- combat_modded(t(err_vec), bat, mod = mod)
+      err_harm_dat <- t(err_harmony$dat.combat)
       err_out <- array(0, dim = dim(dat_err))
       for (i in 1:N) {
         diag(err_out[,,i]) <- diag(dat_err[,,i])
-        err_out[,,i][lower.tri(err_out[,,i])] <- err_com[i,]
+        err_out[,,i][lower.tri(err_out[,,i])] <- err_harm_dat[i,]
         err_out[,,i] <- err_out[,,i] + t(err_out[,,i])
       }
       dat_err <- err_out
     },
-    {})
+    "remove" = {
+      dat_err <- dat_err - dat_err
+      err_harmony = NULL
+    },
+    {
+      message("No error harmonization")
+      err_harmony = NULL
+    })
 
   #### Harmonization of CPC eigenvalues ####
   if (is.null(cpcs)) {
+    message("No CPC harmonization")
     cpc_harmony = NULL
     dat_out = dat_err
   } else {
@@ -129,6 +165,7 @@ cpcharmony <- function(dat, bat, mod = NULL, cpc.method = "stepwise",
         }
       },
       {
+        message("No CPC harmonization")
         cpc_harmony <- NULL
         dat_out = dat_err
       })
@@ -149,5 +186,6 @@ cpcharmony <- function(dat, bat, mod = NULL, cpc.method = "stepwise",
        dat.err = dat_err,
        dat.in = dat,
        cpcs = cpcs,
-       cpc.harmony = cpc_harmony)
+       cpc.harmony = cpc_harmony,
+       err.harmony = err_harmony)
 }

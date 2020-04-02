@@ -7,7 +7,7 @@
 cpc_Flury(dat, iter = 15)
 }
 \arguments{
-\item{dat}{an array of covariance matrices of dimension \eqn{(p \times p \times N)}}
+\item{dat}{an array of covariance matrices of dimension \emph{(p x p x N)}}
 
 \item{iter}{numeric, number of iterations}
 }
@@ -18,5 +18,5 @@ cpc_Flury(dat, iter = 15)
 \item{ncomp}{number of components}
 }
 \description{
-Adapted from the FCPCA function in \emph{multigroup}
+Adapted from the FCPCA function in \emph{multigroup} to handle array input
 }

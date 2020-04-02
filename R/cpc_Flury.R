@@ -1,8 +1,8 @@
 #' Common principal components using Flury's (1986) estimation
 #'
-#' Adapted from the FCPCA function in \emph{multigroup}
+#' Adapted from the FCPCA function in \emph{multigroup} to handle array input
 #'
-#' @param dat an array of covariance matrices of dimension \eqn{(p \times p \times N)}
+#' @param dat an array of covariance matrices of dimension \emph{(p x p x N)}
 #' @param iter numeric, number of iterations
 #'
 #' @return \code{cpc_Flury} returns a list containing the following components:
