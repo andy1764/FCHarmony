@@ -12,7 +12,7 @@ log_covbat(
   mean.only = FALSE,
   score.eb = FALSE,
   pc.sym = TRUE,
-  input.pd = TRUE
+  input.pd = FALSE
 )
 }
 \arguments{

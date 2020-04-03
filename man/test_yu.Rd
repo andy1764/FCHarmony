@@ -9,9 +9,11 @@ Refer to the 2018 paper for further details:
 test_yu(
   raw,
   out,
-  bat,
-  net.rois,
-  net.cov,
+  ...,
+  bat = NULL,
+  net.rois = 1:dim(raw)[3],
+  net.cov = NULL,
+  labs = c("Raw", "Out"),
   p.method = "BH",
   to.corr = TRUE,
   net.only = TRUE

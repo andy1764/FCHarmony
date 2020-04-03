@@ -23,7 +23,7 @@ log_covbat <- function(x, # array of fc matrices, roi x roi x nsubj
                        mean.only = FALSE, # scale parameter in initial ComBat, works better with scaling
                        score.eb = FALSE, # empirical Bayes for scores
                        pc.sym = TRUE, # perform PCA only on lower triangular
-                       input.pd = TRUE # force positive semi-definiteness in input array
+                       input.pd = FALSE # force positive semi-definiteness in input array
 ) {
   n <- dim(x)[3] # store number of obs
   logx <- array(dim = dim(x))

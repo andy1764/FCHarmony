@@ -7,11 +7,14 @@
 test_norms(
   raw,
   out,
-  bat,
+  ...,
+  bat = NULL,
+  labs = c("Raw", "Out"),
   tests = c("Original", "Correlation", "Laplacian", "MDMR"),
   metric = "E",
   lap.thr = 0.25,
-  lap.gam = 0.01
+  lap.gam = 0.01,
+  mdmr.perm = NULL
 )
 }
 \arguments{

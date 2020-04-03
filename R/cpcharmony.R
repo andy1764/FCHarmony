@@ -37,7 +37,8 @@
 cpcharmony <- function(dat, bat, mod = NULL,
                        cpc.method = c("stepwise", "Flury", "CAP", "None"),
                        cpc.k = dim(dat)[1],
-                       err.method = c("log-CovBat", "log-ComBat", "fc-ComBat",
+                       err.method = c("log-CovBat", "log-ComBat", "ComBat",
+                                      "PC-ComBat",
                                       "remove", "None"),
                        method = c("ComBat", "log-ComBat", "None"),
                        force.PD = c(FALSE, FALSE), to.corr = c(FALSE, FALSE),
@@ -74,6 +75,9 @@ cpcharmony <- function(dat, bat, mod = NULL,
           dat_err[,,i] = dat_err[,,i] - cpcs$D[j,i] * tcrossprod(cpcs$CPC[,j])
         }
       }
+      # calculate norm percent as 1 - norm(err)/norm(in)
+      cpcs$norm.percent = mean(1 - apply(dat_err, 3, norm, "f")/
+        apply(dat, 3, norm, "f"))
     },
     "Flury" = {
       cpcs <- cpc_Flury(dat)
@@ -82,6 +86,8 @@ cpcharmony <- function(dat, bat, mod = NULL,
           dat_err[,,i] = dat_err[,,i] - cpcs$D[j,i] * tcrossprod(cpcs$CPC[,j])
         }
       }
+      cpcs$norm.percent = mean(1 - apply(dat_err, 3, norm, "f")/
+                                 apply(dat, 3, norm, "f"))
     },
     "default" = {
       # placeholder for now
@@ -93,6 +99,22 @@ cpcharmony <- function(dat, bat, mod = NULL,
   #### Harmonization of error matrices ####
   switch(
     err.method,
+    "ComBat" = {
+      err_vec <- t(apply(dat_err, 3, function(x) c(x[lower.tri(x)])))
+      err_harmony <- combat_modded(t(err_vec), bat, mod = mod)
+      err_harm_dat <- t(err_harmony$dat.combat)
+      err_out <- array(0, dim = dim(dat_err))
+      for (i in 1:N) {
+        err_out[,,i][lower.tri(err_out[,,i])] <- err_harm_dat[i,]
+        err_out[,,i] <- err_out[,,i] + t(err_out[,,i])
+        diag(err_out[,,i]) <- diag(err_out[,,i])/2
+      }
+      dat_err <- err_out
+    },
+    "PC-ComBat" = {
+      err_harmony = pc_combat(dat_err, bat, mod = mod)
+      dat_err = err_harmony$dat.covbat
+    },
     "log-CovBat" = {
       err_harmony = log_covbat(dat_err, bat, mod = mod)
       dat_err = err_harmony$dat.covbat
@@ -109,7 +131,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
       for (i in 1:N) {
         err_out[,,i][lower.tri(err_out[,,i])] <- err_harm_dat[i,]
         err_out[,,i] <- err_out[,,i] + t(err_out[,,i])
-        diag(err_out[,,i]) <- diag(dat_err_log[,,i])
+        diag(err_out[,,i]) <- diag(err_out[,,i])/2
         err_out[,,i] <- expm(err_out[,,i])
       }
       dat_err <- err_out
@@ -118,7 +140,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
       # PLACEHOLDER
       # Method first implemented by Yu et al. (2018), DOI: 10.1002/hbm.24241
       # Apply ComBat to Fisher-transformed lower triangular elements
-      if(dat_err[,,1] != cov2cor(dat_err[,,1])) {
+      if(!isTRUE(all.equal(dat_err[,,1], cov2cor(dat_err[,,1])))) {
         stop("fc-ComBat only takes correlation matrix inputs")
       }
       err_vec <- atanh(t(apply(dat_err, 3, function(x) c(x[lower.tri(x)]))))

@@ -24,11 +24,11 @@ test_yu <- function(raw, out, ..., bat = NULL, net.rois = 1:dim(raw)[3],
 
   dat <- list(raw, out, ...)
   L <- length(dat)
-  if (length(dat) != length(labs)) {
-    message("Number of inputs and labels differs: using default labels")
+  if (length(dat) > length(labs)) {
+    message("Not enough labels: using default labels")
     labs <- c("Raw", "Out", paste0("Out", 2:(L-1)))
-    labs <- labs[1:L]
   }
+  labs <- labs[1:L]
   names(dat) <- labs
 
   if (to.corr) {
