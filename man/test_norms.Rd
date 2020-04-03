@@ -8,8 +8,8 @@ test_norms(
   raw,
   out,
   bat,
-  tests = c("Original", "Correlation", "Laplacian"),
-  metric = "Euclidean",
+  tests = c("Original", "Correlation", "Laplacian", "MDMR"),
+  metric = "E",
   lap.thr = 0.25,
   lap.gam = 0.01
 )
@@ -18,7 +18,7 @@ test_norms(
 \item{bat}{}
 
 \item{metric}{Metric used to calculate distance. Choose from \code{method} in
-\link[shapes]{distcov}.}
+\link[CovTools]{CovDist}.}
 }
 \value{
 

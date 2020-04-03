@@ -7,15 +7,16 @@
 #' @param bat
 #'
 #' @return
-#' @import igraph
+#' @import igraph doParallel
 #' @importFrom brainGraph efficiency
 #' @importFrom stats kruskal.test p.adjust prcomp lm
 #' @importFrom Matrix rowSums
 #' @export
 #'
 #' @examples
-test_yu <- function(raw, out, bat, net.rois, net.cov, p.method = "BH",
+test_yu <- function(raw, out, bat = NULL, net.rois, net.cov, p.method = "BH",
                     to.corr = TRUE, net.only = TRUE) {
+  if (is.null(bat)) {stop("Need to specify batch")}
   p <- dim(raw)[1]
   N <- dim(raw)[3]
   if (to.corr) {
@@ -37,30 +38,27 @@ test_yu <- function(raw, out, bat, net.rois, net.cov, p.method = "BH",
     kw_p <- NULL; kw_p_adj <- NULL
   }
 
-
-  #### PC regression using upper-triangular elements ####
-
   ## Network measure associated with known covariate ####
   # using brainGraph
+  gr <- list(raw = NULL, out = NULL)
+  for (i in 1:N) {
+    gr$raw[[i]] <- graph_from_adjacency_matrix(
+      abs(raw[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)
+    gr$out[[i]] <- graph_from_adjacency_matrix(
+      abs(out[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)
+  }
+  nodal <- lapply(gr, sapply, efficiency, "nodal")
+  global <- lapply(nodal, colMeans)
+
+  ## Calculating ROI group metrics
+  local <- lapply(gr, sapply, local_eff, which(net.rois))
+  local_sum <- lapply(local, colSums)
   raw_net <- raw[net.rois, net.rois,]
   out_net <- out[net.rois, net.rois,]
-
   # network connectivity, sum of FC values within network ROIs
   net_con <- list(raw = apply(raw_net, 3, sum) - length(net.rois),
                   out = apply(out_net, 3, sum) - length(net.rois))
 
-  gr <- list(raw = NULL, out = NULL)
-  for (i in 1:N) {
-    gr$raw[[i]] <- graph_from_adjacency_matrix(
-      abs(raw_net[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)
-    gr$out[[i]] <- graph_from_adjacency_matrix(
-      abs(out_net[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)
-  }
-  nodal <- lapply(gr, sapply, efficiency, "nodal", use.parallel = FALSE)
-  global <- lapply(nodal, colMeans)
-
-  local <- lapply(gr, sapply, local_eff, use.parallel = FALSE)
-  local_sum <- lapply(local, colSums)
 
   lm_netc <- lapply(net_con, function(x) lm(x ~ net.cov))
   lm_glob <- lapply(global, function(x) lm(x ~ net.cov))
@@ -94,10 +92,10 @@ test_yu <- function(raw, out, bat, net.rois, net.cov, p.method = "BH",
     fc.kw.adj = kw_p_adj,
     fc.kw.p = kw_p,
     net.results = net_res,
-    net.results.site = net_res_site,
-    nodal.eff = nodal,
-    local.eff = local,
-    global.eff = global,
-    local.sum = local_sum
+    net.results.site = net_res_site
+    # nodal.eff = nodal,
+    # local.eff = local,
+    # global.eff = global,
+    # local.sum = local_sum
   ))
 }

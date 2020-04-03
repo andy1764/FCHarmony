@@ -17,10 +17,11 @@
 #' @export
 #'
 #' @examples
-test_norms <- function(raw, out, bat,
+test_norms <- function(raw, out, bat = NULL,
                        tests = c("Original", "Correlation", "Laplacian",
                                  "MDMR"),
                        metric = "E", lap.thr = 0.25, lap.gam = 0.01) {
+  if (is.null(bat)) {stop("Need to specify batch")}
   # Only calculate matrix logs once
   if (metric == "L") {
     if ("Correlation" %in% tests) {
@@ -81,40 +82,66 @@ test_norms <- function(raw, out, bat,
 
     if ("Original" %in% tests) {
       # Frobenius distance of original matrices
-      raw_orig <- apply(all_pair, 1, function(x)
-        CovDist(raw[,,x[1]], raw[,,x[2]], metric)[1,2])
-      out_orig <- apply(all_pair, 1, function(x)
-        CovDist(out[,,x[1]], out[,,x[2]], metric)[1,2])
+      if (metric == "E") {
+        raw_orig <- apply(all_pair, 1, function(x)
+          norm(raw[,,x[1]] - raw[,,x[2]], "f"))
+        out_orig <- apply(all_pair, 1, function(x)
+          norm(out[,,x[1]] - out[,,x[2]], "f"))
+      } else {
+        raw_orig <- apply(all_pair, 1, function(x)
+          CovDist(raw[,,x], metric)[1,2])
+        out_orig <- apply(all_pair, 1, function(x)
+          CovDist(out[,,x], metric)[1,2])
+      }
 
       orig_out[p,] <- c(mean(raw_orig), mean(out_orig))
     }
     if ("Correlation" %in% tests) {
       # Frobenius distance of correlation matrices
-      raw_corr <- apply(all_pair, 1, function(x)
-        CovDist(raw_c[,,x[1]], raw_c[,,x[2]], metric)[1,2])
-      out_corr <- apply(all_pair, 1, function(x)
-        CovDist(out_c[,,x[1]], out_c[,,x[2]], metric)[1,2])
+      if (metric == "E") {
+        raw_corr <- apply(all_pair, 1, function(x)
+          norm(raw_c[,,x[1]] - raw_c[,,x[2]], "f"))
+        out_corr <- apply(all_pair, 1, function(x)
+          norm(out_c[,,x[1]] - out_c[,,x[2]], "f"))
+      } else {
+        raw_corr <- apply(all_pair, 1, function(x)
+          CovDist(raw_c[,,x], metric)[1,2])
+        out_corr <- apply(all_pair, 1, function(x)
+          CovDist(out_c[,,x], metric)[1,2])
+      }
 
       corr_out[p,] <- c(mean(raw_corr), mean(out_corr))
     }
     if ("Laplacian" %in% tests) {
       # Frobenius distance of Laplacian matrices
-      raw_lapl <- apply(all_pair, 1, function(x)
-        CovDist(raw_l[,,x[1]], raw_l[,,x[2]], metric)[1,2])
-      out_lapl <- apply(all_pair, 1, function(x)
-        CovDist(out_l[,,x[1]], out_l[,,x[2]], metric)[1,2])
+      if (metric == "E") {
+        raw_lapl <- apply(all_pair, 1, function(x)
+          norm(raw_l[,,x[1]] - raw_l[,,x[2]], "f"))
+        out_lapl <- apply(all_pair, 1, function(x)
+          norm(out_l[,,x[1]] - out_l[,,x[2]], "f"))
+      } else {
+        raw_lapl <- apply(all_pair, 1, function(x)
+          CovDist(raw_l[,,x], metric)[1,2])
+        out_lapl <- apply(all_pair, 1, function(x)
+          CovDist(out_l[,,x], metric)[1,2])
+      }
 
       lapl_out[p,] <- c(mean(raw_lapl), mean(out_lapl))
     }
   }
   if ("MDMR" %in% tests) {
-    dist_raw <- dist(CovDist(raw, metric))
-    dist_out <- dist(CovDist(out, metric))
+    if (metric == "E") {
+      dist_raw <- dist(t(apply(raw, 3, c)))
+      dist_out <- dist(t(apply(out, 3, c)))
+    } else {
+      dist_raw <- CovDist(raw, metric, as.dist = TRUE)
+      dist_out <- CovDist(out, metric, as.dist = TRUE)
+    }
 
     mdmr_res_raw <- mdmr(data.frame(bat), D = dist_raw, seed = 8888)
     mdmr_res_out <- mdmr(data.frame(bat), D = dist_out, seed = 8888)
 
-    mdmr_out[1,] <- c(mdmr_res_raw$pv, mdmr_res_out$pv)
+    mdmr_out[1,] <- c(mdmr_res_raw$pv[1,1], mdmr_res_out$pv[1,1])
   }
-  cbind(orig_out, corr_out, lapl_out)
+  cbind(orig_out, corr_out, lapl_out, mdmr_out)
 }
