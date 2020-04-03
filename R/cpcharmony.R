@@ -107,24 +107,28 @@ cpcharmony <- function(dat, bat, mod = NULL,
       err_harm_dat <- t(err_harmony$dat.combat)
       err_out <- array(0, dim = dim(dat_err_log))
       for (i in 1:N) {
-        diag(err_out[,,i]) <- diag(dat_err_log[,,i])
         err_out[,,i][lower.tri(err_out[,,i])] <- err_harm_dat[i,]
         err_out[,,i] <- err_out[,,i] + t(err_out[,,i])
+        diag(err_out[,,i]) <- diag(dat_err_log[,,i])
         err_out[,,i] <- expm(err_out[,,i])
       }
       dat_err <- err_out
     },
     "fc-ComBat" =  {
+      # PLACEHOLDER
       # Method first implemented by Yu et al. (2018), DOI: 10.1002/hbm.24241
       # Apply ComBat to Fisher-transformed lower triangular elements
+      if(dat_err[,,1] != cov2cor(dat_err[,,1])) {
+        stop("fc-ComBat only takes correlation matrix inputs")
+      }
       err_vec <- atanh(t(apply(dat_err, 3, function(x) c(x[lower.tri(x)]))))
       err_harmony <- combat_modded(t(err_vec), bat, mod = mod)
       err_harm_dat <- tanh(t(err_harmony$dat.combat))
       err_out <- array(0, dim = dim(dat_err))
       for (i in 1:N) {
-        diag(err_out[,,i]) <- diag(dat_err[,,i])
         err_out[,,i][lower.tri(err_out[,,i])] <- err_harm_dat[i,]
         err_out[,,i] <- err_out[,,i] + t(err_out[,,i])
+        diag(err_out[,,i]) <- diag(dat_err[,,i])
       }
       dat_err <- err_out
     },
