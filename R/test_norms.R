@@ -17,49 +17,35 @@
 #' @export
 #'
 #' @examples
-test_norms <- function(raw, out, bat = NULL,
+test_norms <- function(raw, out, ..., bat = NULL, labs = c("Raw", "Out"),
                        tests = c("Original", "Correlation", "Laplacian",
                                  "MDMR"),
                        metric = "E", lap.thr = 0.25, lap.gam = 0.01) {
   if (is.null(bat)) {stop("Need to specify batch")}
+  dat <- list(raw, out, ...)
+  N <- length(dat)
+
+  if (length(dat) != length(labs)) {
+    message("Number of inputs and labels differs: using default labels")
+    labs <- c("Raw", "Out", paste0("Out", 2:(N-1)))
+  }
+  names(dat) <- labs[1:N]
+
   # Only calculate matrix logs once
   if (metric == "L") {
     if ("Correlation" %in% tests) {
-      raw_c <- sapply(seq_along(raw[1,1,]),
-                      function(x) logm_eig(cov2cor(raw[,,x])),
-                      simplify = "array")
-      out_c <- sapply(seq_along(out[1,1,]),
-                      function(x) logm_eig(cov2cor(out[,,x])),
-                      simplify = "array")
+      dat_c <- lapply(dat, function(x) array(apply(x, 3, cov2cor), dim(x)))
     }
-
     if ("Laplacian" %in% tests) {
-      raw_l <- sapply(seq_along(raw[1,1,]),
-                      function(x) logm_eig(cov2lap(raw[,,x], lap.thr, lap.gam)),
-                      simplify = "array")
-      out_l <- sapply(seq_along(out[1,1,]),
-                      function(x) logm_eig(cov2lap(out[,,x], lap.thr, lap.gam)),
-                      simplify = "array")
+      dat_l <- lapply(dat, function(x) array(apply(x, 3, cov2lap,
+                                                   lap.thr, lap.gam), dim(x)))
     }
-
-    raw <- sapply(seq_along(raw[1,1,]), function(x) logm_eig(raw[,,x]),
-                    simplify = "array")
-    out <- sapply(seq_along(out[1,1,]), function(x) logm_eig(out[,,x]),
-                  simplify = "array")
-
+    dat <- lapply(dat, function(x) array(apply(x, 3, logm_eig), dim(x)))
     metric <- "E"
   } else {
-    raw_c <- sapply(seq_along(raw[1,1,]), function(x) cov2cor(raw[,,x]),
-                    simplify = "array")
-    out_c <- sapply(seq_along(out[1,1,]), function(x) cov2cor(out[,,x]),
-                    simplify = "array")
-
-    raw_l <- sapply(seq_along(raw[1,1,]),
-                    function(x) cov2lap(raw[,,x], lap.thr, lap.gam),
-                    simplify = "array")
-    out_l <- sapply(seq_along(out[1,1,]),
-                    function(x) cov2lap(out[,,x], lap.thr, lap.gam),
-                    simplify = "array")
+    dat_c <- lapply(dat, function(x) array(apply(x, 3, cov2cor), dim(x)))
+    dat_l <- lapply(dat, function(x) array(apply(x, 3, cov2lap,
+                                                 lap.thr, lap.gam), dim(x)))
   }
 
   bat <- droplevels(bat)
@@ -67,21 +53,25 @@ test_norms <- function(raw, out, bat = NULL,
   bat_pairs <- combn(bat_lvl, 2)
   P <- ncol(bat_pairs) # number of pairs
   pair_names <- apply(bat_pairs, 2, paste0, collapse = ",")
-  orig_out <- matrix(NA, P, 2, dimnames = list(pair_names,
-                                              c("Raw.Orig", "Out.Orig")))
-  corr_out <- matrix(NA, P, 2, dimnames = list(pair_names,
+
+  all_out <- list()
+
+  corr_out <- matrix(NA, P, N, dimnames = list(pair_names,
                                               c("Raw.Corr", "Out.Corr")))
-  lapl_out <- matrix(NA, P, 2, dimnames = list(pair_names,
+  lapl_out <- matrix(NA, P, N, dimnames = list(pair_names,
                                               c("Raw.Lapl", "Out.Lapl")))
-  mdmr_out <- matrix(NA, P, 2, dimnames = list(pair_names,
+  mdmr_out <- matrix(NA, P, N, dimnames = list(pair_names,
                                                c("Raw.MDMR", "Out.MDMR")))
 
-  for (p in 1:P) {
-    all_pair <- expand.grid(which(bat == bat_pairs[1, p]),
-                            which(bat == bat_pairs[2, p]))
 
-    if ("Original" %in% tests) {
+
+  if ("Original" %in% tests) {
+    for (p in 1:P) {
+      all_pair <- expand.grid(which(bat == bat_pairs[1, p]),
+                              which(bat == bat_pairs[2, p]))
       # Frobenius distance of original matrices
+      orig_out <- matrix(NA, P, N, dimnames = list(pair_names,
+                                                   paste0(labs, ".Orig")))
       if (metric == "E") {
         raw_orig <- apply(all_pair, 1, function(x)
           norm(raw[,,x[1]] - raw[,,x[2]], "f"))
@@ -93,8 +83,10 @@ test_norms <- function(raw, out, bat = NULL,
         out_orig <- apply(all_pair, 1, function(x)
           CovDist(out[,,x], metric)[1,2])
       }
-
       orig_out[p,] <- c(mean(raw_orig), mean(out_orig))
+    }
+
+
     }
     if ("Correlation" %in% tests) {
       # Frobenius distance of correlation matrices

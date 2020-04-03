@@ -116,9 +116,10 @@ cpcharmony <- function(dat, bat, mod = NULL,
     },
     "fc-ComBat" =  {
       # Method first implemented by Yu et al. (2018), DOI: 10.1002/hbm.24241
-      err_vec <- t(apply(dat_err, 3, function(x) c(x[lower.tri(x)])))
+      # Apply ComBat to Fisher-transformed lower triangular elements
+      err_vec <- atanh(t(apply(dat_err, 3, function(x) c(x[lower.tri(x)]))))
       err_harmony <- combat_modded(t(err_vec), bat, mod = mod)
-      err_harm_dat <- t(err_harmony$dat.combat)
+      err_harm_dat <- tanh(t(err_harmony$dat.combat))
       err_out <- array(0, dim = dim(dat_err))
       for (i in 1:N) {
         diag(err_out[,,i]) <- diag(dat_err[,,i])
