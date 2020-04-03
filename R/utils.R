@@ -31,7 +31,10 @@ local_eff <- function (g, ind, weights = NULL, use.parallel = TRUE, A = NULL) {
   }
   eff <- rep(0, nrow(A))
   nodes <- which(rowSums((A > 0) + 0) > 1)
-  if (!is.null(ind)) {nodes <- intersect(nodes, ind)}
+  if (!is.null(ind)) {
+    if (is.logical(ind)) {ind <- which(ind)}
+    nodes <- intersect(nodes, ind)
+    }
   X <- apply(A, 1, function(x) which(x > 0))
   if (length(nodes) > 0) {
     if (isTRUE(use.parallel)) {

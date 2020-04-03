@@ -14,19 +14,28 @@
 #' @export
 #'
 #' @examples
-test_yu <- function(raw, out, bat = NULL, net.rois, net.cov, p.method = "BH",
+test_yu <- function(raw, out, ..., bat = NULL, net.rois = 1:dim(raw)[3],
+                    net.cov = NULL, labs = c("Raw", "Out"),
+                    p.method = "BH",
                     to.corr = TRUE, net.only = TRUE) {
   if (is.null(bat)) {stop("Need to specify batch")}
   p <- dim(raw)[1]
   N <- dim(raw)[3]
-  if (to.corr) {
-    raw <- sapply(seq_along(raw[1,1,]), function(x) cov2cor(raw[,,x]),
-                  simplify = "array")
-    out <- sapply(seq_along(out[1,1,]), function(x) cov2cor(out[,,x]),
-                  simplify = "array")
+
+  dat <- list(raw, out, ...)
+  L <- length(dat)
+  if (length(dat) != length(labs)) {
+    message("Number of inputs and labels differs: using default labels")
+    labs <- c("Raw", "Out", paste0("Out", 2:(L-1)))
+    labs <- labs[1:L]
   }
-  all_vec <- list(raw = t(apply(raw, 3, function(x) c(x[lower.tri(x)]))),
-                  out = t(apply(out, 3, function(x) c(x[lower.tri(x)]))))
+  names(dat) <- labs
+
+  if (to.corr) {
+    dat <- lapply(dat, function(x) array(apply(x, 3, cov2cor), dim(x)))
+  }
+  all_vec <- lapply(dat, function(x)
+    t(apply(x, 3, function(y) c(y[lower.tri(y)]))))
 
   #### Entry-wise Kruskal-Wallis ####
   if (!net.only) {
@@ -40,53 +49,52 @@ test_yu <- function(raw, out, bat = NULL, net.rois, net.cov, p.method = "BH",
 
   ## Network measure associated with known covariate ####
   # using brainGraph
-  gr <- list(raw = NULL, out = NULL)
-  for (i in 1:N) {
-    gr$raw[[i]] <- graph_from_adjacency_matrix(
-      abs(raw[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)
-    gr$out[[i]] <- graph_from_adjacency_matrix(
-      abs(out[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)
-  }
+  gr <- lapply(dat, function(x)
+    lapply(1:N, function(i) graph_from_adjacency_matrix(
+      abs(x[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)))
   nodal <- lapply(gr, sapply, efficiency, "nodal")
   global <- lapply(nodal, colMeans)
 
   ## Calculating ROI group metrics
-  local <- lapply(gr, sapply, local_eff, which(net.rois))
+  local <- lapply(gr, sapply, local_eff, net.rois)
   local_sum <- lapply(local, colSums)
-  raw_net <- raw[net.rois, net.rois,]
-  out_net <- out[net.rois, net.rois,]
+  dat_net <- lapply(dat, function(x) x[net.rois, net.rois,])
   # network connectivity, sum of FC values within network ROIs
-  net_con <- list(raw = apply(raw_net, 3, sum) - length(net.rois),
-                  out = apply(out_net, 3, sum) - length(net.rois))
+  net_con <- lapply(dat_net, function(x) apply(x, 3, sum) - length(net.rois))
 
-
-  lm_netc <- lapply(net_con, function(x) lm(x ~ net.cov))
-  lm_glob <- lapply(global, function(x) lm(x ~ net.cov))
-  lm_local <- lapply(local_sum, function(x) lm(x ~ net.cov))
-
-  net_res <- matrix(0, 2, 6, dimnames = list(c("Raw", "Out"),
-                                            c("Network.connectivity.r2",
-                                              "Network.connectivity.p",
-                                              "Global.Eff.r2",
-                                              "Global.Eff.p",
-                                              "Local.Eff.Sum.r2",
-                                              "Local.Eff.Sum.p")))
-  net_summary <- function(x) c(summary(x)$r.squared, summary(x)$coefficients[2,4])
-  net_res[,1:2] <- t(sapply(lm_netc, net_summary))
-  net_res[,3:4] <- t(sapply(lm_glob, net_summary))
-  net_res[,5:6] <- t(sapply(lm_local, net_summary))
-
-  netc_p <- lapply(net_con, function(x) kruskal.test(x, bat)$p.value)
-  glob_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
-  local_p <- lapply(local_sum, function(x) kruskal.test(x, bat)$p.value)
-
-  net_res_site <- matrix(0, 2, 3, dimnames = list(c("Raw", "Out"),
+  #### Network measures associated with site
+  net_res_site <- matrix(0, L, 3, dimnames = list(labs,
                                                   c("Network.connectivity.p",
                                                     "Global.Eff.p",
                                                     "Local.Eff.Sum.p")))
+  netc_p <- lapply(net_con, function(x) kruskal.test(x, bat)$p.value)
+  glob_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
+  local_p <- lapply(local_sum, function(x) kruskal.test(x, bat)$p.value)
   net_res_site[,1] <- unlist(netc_p)
   net_res_site[,2] <- unlist(glob_p)
   net_res_site[,3] <- unlist(local_p)
+
+  #### Network measures associated with covariate (OPTIONAL)
+  if (is.null(net.cov)) {
+    net_res <- NULL
+  } else {
+    net_res <- matrix(0, L, 6, dimnames = list(labs,
+                                               c("Network.connectivity.r2",
+                                                 "Network.connectivity.p",
+                                                 "Global.Eff.r2",
+                                                 "Global.Eff.p",
+                                                 "Local.Eff.Sum.r2",
+                                                 "Local.Eff.Sum.p")))
+
+    lm_netc <- lapply(net_con, function(x) lm(x ~ net.cov))
+    lm_glob <- lapply(global, function(x) lm(x ~ net.cov))
+    lm_local <- lapply(local_sum, function(x) lm(x ~ net.cov))
+
+    net_summary <- function(x) c(summary(x)$r.squared, summary(x)$coefficients[2,4])
+    net_res[,1:2] <- t(sapply(lm_netc, net_summary))
+    net_res[,3:4] <- t(sapply(lm_glob, net_summary))
+    net_res[,5:6] <- t(sapply(lm_local, net_summary))
+  }
 
   return(list(
     fc.kw.adj = kw_p_adj,
