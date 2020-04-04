@@ -14,18 +14,18 @@
 #' @export
 #'
 #' @examples
-test_yu <- function(raw, out, ..., bat = NULL, net.rois = 1:dim(raw)[3],
+test_yu <- function(..., bat = NULL, net.rois = 1:dim(raw)[3],
                     net.cov = NULL, labs = c("Raw", "Out"),
                     p.method = "BH",
                     to.corr = TRUE, net.only = TRUE) {
   if (is.null(bat)) {stop("Need to specify batch")}
-  p <- dim(raw)[1]
-  N <- dim(raw)[3]
+  dat <- list(...)
+  p <- dim(dat[[1]])[1]
+  N <- dim(dat[[1]])[3]
 
-  dat <- list(raw, out, ...)
   L <- length(dat)
   if (length(dat) > length(labs)) {
-    message("Not enough labels: using default labels")
+    message("Not enough labels: assuming first is raw and using default labels")
     labs <- c("Raw", "Out", paste0("Out", 2:(L-1)))
   }
   labs <- labs[1:L]

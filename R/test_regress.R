@@ -21,17 +21,17 @@
 #' @export
 #'
 #' @examples
-test_regress <- function(raw, out, ..., bat = NULL, mod = NULL,
+test_regress <- function(..., bat = NULL, mod = NULL,
                          labs = c("Raw", "Out"),
                          tests = c("MDMR", "MDMR-C", "MDMR-L"),
                          metric = "E", lap.thr = 0.25, lap.gam = 0.01,
                          mdmr.perm = NULL) {
   if (is.null(bat)) {stop("Need to specify batch")}
-  dat <- list(raw, out, ...)
+  dat <- list(...)
   L <- length(dat)
 
   if (length(dat) > length(labs)) {
-    message("Not enough labels: using default labels")
+    message("Not enough labels: assuming first is raw and using default labels")
     labs <- c("Raw", "Out", paste0("Out", 2:(L-1)))
   }
   labs <- labs[1:L]

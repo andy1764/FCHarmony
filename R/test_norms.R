@@ -17,17 +17,17 @@
 #' @export
 #'
 #' @examples
-test_norms <- function(raw, out, ..., bat = NULL, labs = c("Raw", "Out"),
+test_norms <- function(..., bat = NULL, labs = c("Raw", "Out"),
                        tests = c("Original", "Correlation", "Laplacian",
                                  "MDMR"),
                        metric = "E", lap.thr = 0.25, lap.gam = 0.01,
                        mdmr.perm = NULL) {
   if (is.null(bat)) {stop("Need to specify batch")}
-  dat <- list(raw, out, ...)
+  dat <- list(...)
   L <- length(dat)
 
   if (length(dat) > length(labs)) {
-    message("Not enough labels: using default labels")
+    message("Not enough labels: assuming first is raw and using default labels")
     labs <- c("Raw", "Out", paste0("Out", 2:(L-1)))
   }
   labs <- labs[1:L]
