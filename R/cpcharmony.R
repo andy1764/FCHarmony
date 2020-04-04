@@ -124,12 +124,13 @@ cpcharmony <- function(dat, bat, mod = NULL,
       dat_err_log <- sapply(seq_along(dat_err[1,1,]),
                             function(x) logm_eig(dat_err[,,x]),
                             simplify = "array")
-      err_vec <- t(apply(dat_err_log, 3, function(x) c(x[lower.tri(x)])))
+      err_vec <- t(apply(dat_err_log, 3, function(x)
+        c(x[lower.tri(x, diag = TRUE)])))
       err_harmony <- combat_modded(t(err_vec), bat, mod = mod)
       err_harm_dat <- t(err_harmony$dat.combat)
       err_out <- array(0, dim = dim(dat_err_log))
       for (i in 1:N) {
-        err_out[,,i][lower.tri(err_out[,,i])] <- err_harm_dat[i,]
+        err_out[,,i][lower.tri(err_out[,,i], diag = TRUE)] <- err_harm_dat[i,]
         err_out[,,i] <- err_out[,,i] + t(err_out[,,i])
         diag(err_out[,,i]) <- diag(err_out[,,i])/2
         err_out[,,i] <- expm(err_out[,,i])

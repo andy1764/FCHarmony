@@ -37,10 +37,12 @@ test_norms <- function(raw, out, ..., bat = NULL, labs = c("Raw", "Out"),
   if (metric == "L") {
     if ("Correlation" %in% tests) {
       dat_c <- lapply(dat, function(x) array(apply(x, 3, cov2cor), dim(x)))
+      dat_c <- lapply(dat_c, function(x) array(apply(x, 3, logm_eig), dim(x)))
     }
     if ("Laplacian" %in% tests) {
       dat_l <- lapply(dat, function(x) array(apply(x, 3, cov2lap,
                                                    lap.thr, lap.gam), dim(x)))
+      dat_l <- lapply(dat_l, function(x) array(apply(x, 3, logm_eig), dim(x)))
     }
     dat <- lapply(dat, function(x) array(apply(x, 3, logm_eig), dim(x)))
     metric <- "E"
