@@ -12,6 +12,7 @@
 #' @param lap.thr
 #' @param lap.gam
 #' @param mdmr.perm
+#' @param GPU.dist
 #'
 #' @return
 #' @importFrom CovTools CovDist
@@ -21,11 +22,12 @@
 #' @export
 #'
 #' @examples
-test_regress <- function(..., bat = NULL, mod = NULL,
-                         labs = c("Raw", "Out"),
-                         tests = c("MDMR", "MDMR-C", "MDMR-L"),
-                         metric = "E", lap.thr = 0.25, lap.gam = 0.01,
-                         mdmr.perm = NULL) {
+test_mdmr <- function(..., bat = NULL, mod = NULL,
+                      labs = c("Raw", "Out"),
+                      tests = c("MDMR", "MDMR-C", "MDMR-L"),
+                      metric = "E", lap.thr = 0.25, lap.gam = 0.01,
+                      mdmr.perm = NULL, mdmr.nperm = 10000,
+                      GPU.dist = FALSE) {
   if (is.null(bat)) {stop("Need to specify batch")}
   dat <- list(...)
   L <- length(dat)
@@ -116,7 +118,7 @@ test_regress <- function(..., bat = NULL, mod = NULL,
     } else {
       mdmr_res <- lapply(all_dist, function(x)
         mdmr(data.frame(covt_mod[,-1], bat), D = x,
-             perm.p = mdmr.perm, seed = 8888))
+             perm.p = mdmr.perm, nperm = mdmr.nperm, seed = 8888))
     }
 
     mdmr_out <- do.call(rbind, sapply(mdmr_res, getElement, "pv"))

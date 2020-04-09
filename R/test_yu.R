@@ -15,15 +15,13 @@
 #'
 #' @examples
 test_yu <- function(..., bat = NULL, net.rois = 1:dim(raw)[3],
-                    net.cov = NULL, labs = c("Raw", "Out"),
+                    net.cov = NULL, threshold = NULL, labs = c("Raw", "Out"),
                     p.method = "BH",
                     to.corr = TRUE, net.only = TRUE) {
   if (is.null(bat)) {stop("Need to specify batch")}
   dat <- list(...)
-  p <- dim(dat[[1]])[1]
-  N <- dim(dat[[1]])[3]
-
   L <- length(dat)
+
   if (length(dat) > length(labs)) {
     message("Not enough labels: assuming first is raw and using default labels")
     labs <- c("Raw", "Out", paste0("Out", 2:(L-1)))
@@ -49,9 +47,19 @@ test_yu <- function(..., bat = NULL, net.rois = 1:dim(raw)[3],
 
   ## Network measure associated with known covariate ####
   # using brainGraph
-  gr <- lapply(dat, function(x)
-    lapply(1:N, function(i) graph_from_adjacency_matrix(
-      abs(x[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)))
+  if (!is.null(threshold)) {
+    gr <- lapply(dat, function(x)
+      lapply(1:dim(x)[3], function(i) {
+        x[,,i] <- abs(x[,,i])
+        x[,,i][x[,,i] <= threshold] <- 0
+        graph_from_adjacency_matrix(
+          x[,,i], mode = "undirected", diag = FALSE, weighted = TRUE)
+        }))
+  } else {
+    gr <- lapply(dat, function(x)
+      lapply(1:dim(x)[3], function(i) graph_from_adjacency_matrix(
+        abs(x[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)))
+  }
   nodal <- lapply(gr, sapply, efficiency, "nodal")
   global <- lapply(nodal, colMeans)
 
@@ -96,14 +104,14 @@ test_yu <- function(..., bat = NULL, net.rois = 1:dim(raw)[3],
     net_res[,5:6] <- t(sapply(lm_local, net_summary))
   }
 
-  return(list(
+  list(
     fc.kw.adj = kw_p_adj,
     fc.kw.p = kw_p,
     net.results = net_res,
-    net.results.site = net_res_site
-    # nodal.eff = nodal,
-    # local.eff = local,
-    # global.eff = global,
-    # local.sum = local_sum
-  ))
+    net.results.site = net_res_site,
+    eff.res = (list(nodal.eff = nodal,
+                    local.eff = local,
+                    global.eff = global,
+                    local.sum = local_sum))
+  )
 }

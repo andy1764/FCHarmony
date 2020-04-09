@@ -5,8 +5,6 @@
 \title{Title}
 \usage{
 test_norms(
-  raw,
-  out,
   ...,
   bat = NULL,
   labs = c("Raw", "Out"),
