@@ -11,6 +11,7 @@ test_yu(
   bat = NULL,
   net.rois = 1:dim(raw)[3],
   net.cov = NULL,
+  threshold = NULL,
   labs = c("Raw", "Out"),
   p.method = "BH",
   to.corr = TRUE,

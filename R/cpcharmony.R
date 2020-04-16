@@ -34,11 +34,12 @@
 #'
 #' @examples
 
-cpcharmony <- function(dat, bat, mod = NULL,
+cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE,
                        cpc.method = c("stepwise", "Flury", "CAP", "None"),
                        cpc.k = dim(dat)[1],
                        err.method = c("log-CovBat", "log-ComBat", "ComBat",
-                                      "PC-ComBat",
+                                      "CovBat",
+                                      "PC-ComBat", "log-PC-ComBat",
                                       "remove", "None"),
                        method = c("ComBat", "log-ComBat", "None"),
                        force.PD = c(FALSE, FALSE), to.corr = c(FALSE, FALSE),
@@ -52,14 +53,15 @@ cpcharmony <- function(dat, bat, mod = NULL,
   N <- dim(dat)[3]
 
   if (force.PD[1]) {
-    for (i in 1:N) {
-      dat[,,i] <- as.numeric(nearPD(dat[,,i])$mat)
-    }
+    dat <- array(apply(dat, 3, function(x) {
+      as.numeric(nearPD(x)$mat)
+    }), dim(dat))
   }
   if (to.corr[1]) {
-    for (i in 1:N) {
-      dat[,,i] <- cov2cor(dat[,,i])
-    }
+    dat <- array(apply(dat, 3, cov2cor), dim(dat))
+  }
+  if (log.input) {
+    dat <- array(apply(dat, 3, logm_eig), dim(dat))
   }
 
   dat_err <- dat # store error matrices
@@ -111,49 +113,40 @@ cpcharmony <- function(dat, bat, mod = NULL,
       }
       dat_err <- err_out
     },
-    "PC-ComBat" = {
-      err_harmony = pc_combat(dat_err, bat, mod = mod)
-      dat_err = err_harmony$dat.covbat
-    },
-    "log-CovBat" = {
-      err_harmony = log_covbat(dat_err, bat, mod = mod)
-      dat_err = err_harmony$dat.covbat
-    },
-    "log-ComBat" = {
-      # Vectorize matrix log then harmonize element-wise via ComBat
-      dat_err_log <- sapply(seq_along(dat_err[1,1,]),
-                            function(x) logm_eig(dat_err[,,x]),
-                            simplify = "array")
-      err_vec <- t(apply(dat_err_log, 3, function(x)
-        c(x[lower.tri(x, diag = TRUE)])))
-      err_harmony <- combat_modded(t(err_vec), bat, mod = mod)
-      err_harm_dat <- t(err_harmony$dat.combat)
-      err_out <- array(0, dim = dim(dat_err_log))
-      for (i in 1:N) {
-        err_out[,,i][lower.tri(err_out[,,i], diag = TRUE)] <- err_harm_dat[i,]
-        err_out[,,i] <- err_out[,,i] + t(err_out[,,i])
-        diag(err_out[,,i]) <- diag(err_out[,,i])/2
-        err_out[,,i] <- expm(err_out[,,i])
-      }
-      dat_err <- err_out
-    },
-    "fc-ComBat" =  {
-      # PLACEHOLDER
-      # Method first implemented by Yu et al. (2018), DOI: 10.1002/hbm.24241
-      # Apply ComBat to Fisher-transformed lower triangular elements
-      if(!isTRUE(all.equal(dat_err[,,1], cov2cor(dat_err[,,1])))) {
-        stop("fc-ComBat only takes correlation matrix inputs")
-      }
-      err_vec <- atanh(t(apply(dat_err, 3, function(x) c(x[lower.tri(x)]))))
-      err_harmony <- combat_modded(t(err_vec), bat, mod = mod)
-      err_harm_dat <- tanh(t(err_harmony$dat.combat))
+    "CovBat" = {
+      err_vec <- t(apply(dat_err, 3, function(x) c(x[lower.tri(x)])))
+      err_harmony <- covbat(t(err_vec), bat, mod = mod)
+      err_harm_dat <- t(err_harmony$dat.covbat)
       err_out <- array(0, dim = dim(dat_err))
       for (i in 1:N) {
         err_out[,,i][lower.tri(err_out[,,i])] <- err_harm_dat[i,]
         err_out[,,i] <- err_out[,,i] + t(err_out[,,i])
-        diag(err_out[,,i]) <- diag(dat_err[,,i])
+        diag(err_out[,,i]) <- diag(err_out[,,i])/2
       }
       dat_err <- err_out
+    },
+    "PC-ComBat" = {
+      err_harmony = pc_combat(dat_err, bat, mod = mod)
+      dat_err = err_harmony$dat.covbat
+    },
+    "log-PC-CovBat" = {
+      dat_err_log <- sapply(seq_along(dat_err[1,1,]),
+                            function(x) logm_eig(dat_err[,,x]),
+                            simplify = "array")
+      err_harmony = pc_combat(dat_err, bat, mod = mod)
+      dat_err <- sapply(seq_along(dat_err[1,1,]),
+                        function(x) expm(pc_combat$dat.out[,,x], "R_Eigen"),
+                        simplify = "array")
+      dat_err = err_harmony$dat.covbat
+    },
+    "log-CovBat" = {
+      err_harmony = log_covbat(dat_err, bat, mod = mod)
+      dat_err = err_harmony$dat.out
+    },
+    "log-ComBat" = {
+      # Vectorize matrix log then harmonize element-wise via ComBat
+      err_harmony = log_combat(dat_err, bat, mod = mod)
+      dat_err = err_harmony$dat.out
     },
     "remove" = {
       dat_err <- dat_err - dat_err
@@ -200,14 +193,15 @@ cpcharmony <- function(dat, bat, mod = NULL,
   }
 
   if (force.PD[2]) {
-    for (i in 1:N) {
-      dat_out[,,i] <- as.numeric(nearPD(dat_out[,,i])$mat)
-    }
+    dat_out <- array(apply(dat_out, 3, function(x) {
+      as.numeric(nearPD(x)$mat)
+    }), dim(dat_out))
   }
   if (to.corr[2]) {
-    for (i in 1:N) {
-      dat_out[,,i] <- cov2cor(dat_out[,,i])
-    }
+    dat_out <- array(apply(dat_out, 3, cov2cor), dim(dat_out))
+  }
+  if (log.input) {
+    dat_out <- array(apply(dat_out, 3, expm, "R_Eigen"), dim(dat_out))
   }
 
   list(dat.out = dat_out,

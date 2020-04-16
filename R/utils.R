@@ -1,3 +1,13 @@
+# simple function to convert lower triangular entries to symmetric matrix
+vec2corr <- function(vec, corr = FALSE) {
+  d <- (1 + sqrt(8*length(vec)+1))/2 # dim of output
+  out <- matrix(0, d, d)
+  out[lower.tri(out, diag=FALSE)] <- vec
+  out <- out + t(out)
+  if (corr) {diag(out) <- 1}
+  out
+}
+
 # convert covariance to Laplacian with a given threshold,
 cov2lap <- function(cov, threshold = 0.5, gamma = 0.01) {
   corr <- cov2cor(as.matrix(nearPD(cov)$mat))
@@ -16,6 +26,12 @@ logm_eig <- function(x) {
   if (any(eig$values <= 0)) {stop("Input is not positive definite")}
   eig$vectors %*% diag(log(eig$values)) %*% t(eig$vectors)
 }
+
+# # get matrix exponential of diagonalizable matrix
+# expm_eig <- function(x) {
+#   eig <- eigen(x, symmetric = TRUE)
+#   eig$vectors %*% diag(exp(eig$values)) %*% t(eig$vectors)
+# }
 
 # logm_eig <- function(x) {
 #   n <- dim(x)[1]

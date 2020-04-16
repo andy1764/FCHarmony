@@ -14,11 +14,12 @@ test_mdmr(
   lap.thr = 0.25,
   lap.gam = 0.01,
   mdmr.perm = NULL,
-  mdmr.nperm = 10000
+  mdmr.nperm = 10000,
+  GPU.dist = FALSE
 )
 }
 \arguments{
-\item{mdmr.perm}{}
+\item{GPU.dist}{}
 }
 \value{
 

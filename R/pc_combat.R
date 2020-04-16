@@ -61,11 +61,8 @@ pc_combat <- function(x, # array of fc matrices, roi x roi x nsubj
   }
   out_covbat <- est_mat
 
-  return(list(dat.covbat=out_covbat,
-              dat.log.covbat=est_mat,
-              dat.input=x,
-              dat.log.input=logx,
-              scores.gamma=scores_com$gamma.hat, scores.delta=scores_com$delta.hat,
-              npc=npc,
-              x.pc = v_pc, com.scores = scores_com))
+  list(dat.out=out_covbat,
+       dat.pc = v_pc,
+       combat.out = scores_com,
+       npc=npc)
 }

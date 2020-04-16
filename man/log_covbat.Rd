@@ -2,7 +2,7 @@
 % Please edit documentation in R/log_covbat.R
 \name{log_covbat}
 \alias{log_covbat}
-\title{Harmonization using principal components of log-transformed matrices}
+\title{Harmonization using CovBat on log-transformed matrices}
 \usage{
 log_covbat(
   x,
@@ -22,5 +22,5 @@ log_covbat(
 
 }
 \description{
-Harmonization using principal components of log-transformed matrices
+Harmonization using CovBat on log-transformed matrices
 }
