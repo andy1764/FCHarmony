@@ -7,7 +7,7 @@
 #' @param bat
 #'
 #' @return
-#' @import igraph doParallel
+#' @import igraph doParallel foreach
 #' @importFrom brainGraph efficiency
 #' @importFrom stats kruskal.test p.adjust prcomp lm
 #' @importFrom Matrix rowSums

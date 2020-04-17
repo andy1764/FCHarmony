@@ -1,10 +1,20 @@
 # simple function to convert lower triangular entries to symmetric matrix
-vec2corr <- function(vec, corr = FALSE) {
+vec2corr <- function(vec, names = NULL, corr = FALSE) {
   d <- (1 + sqrt(8*length(vec)+1))/2 # dim of output
-  out <- matrix(0, d, d)
+  out <- matrix(0, d, d, dimnames = names)
   out[lower.tri(out, diag=FALSE)] <- vec
   out <- out + t(out)
   if (corr) {diag(out) <- 1}
+  out
+}
+
+# simple function to convert lower triangular (incl diag) to symmetric matrix
+dvec2corr <- function(vec, names = NULL) {
+  d <- (sqrt(8*length(vec)+1)-1)/2 # dim of output
+  out <- matrix(0, d, d, dimnames = names)
+  out[lower.tri(out, diag=TRUE)] <- vec
+  out <- out + t(out)
+  diag(out) <- diag(out)/2
   out
 }
 
@@ -18,6 +28,26 @@ cov2lap <- function(cov, threshold = 0.5, gamma = 0.01) {
   # gamma addition ensures positive definite
   diag(corr) <- -apply(corr, 1, sum) + gamma
   return(corr)
+}
+
+# convert correlation matrix to connectivity values grouped by ROI
+corr2con <- function(corr, dims = NULL) {
+  if (is.null(dims)) {dims <- dimnames(corr)}
+  rois <- sort(unique(dims[[1]]))
+  p <- length(rois)
+  corr[lower.tri(corr, diag = TRUE)] <- 0
+
+  out <- matrix(0, p, p, dimnames = list(rois, rois))
+  for (i in 1:p) {
+    ind_i <- dims[[1]] == rois[i]
+    for (j in 1:i) {
+      ind_j <- dims[[2]] == rois[j]
+      out[i,j] <- mean(corr[ind_i, ind_j])
+    }
+  }
+  out <- out + t(out)
+  diag(out) <- diag(out)/2
+  out
 }
 
 # get matrix logarithm of SPD matrix

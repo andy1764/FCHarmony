@@ -23,9 +23,7 @@ log_combat <- function(x, # array of fc matrices, roi x roi x nsubj
 ) {
   n <- dim(x)[3] # store number of obs
   if (input.pd) {
-    x <- array(apply(dat, 3, function(x) {
-      as.numeric(nearPD(x)$mat)
-    }), dim(dat))
+    x <- array(apply(dat, 3, function(x) {as.numeric(nearPD(x)$mat)}), dim(dat))
   }
   logx <- array(apply(x, 3, logm_eig), dim(x))
 

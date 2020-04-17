@@ -34,13 +34,13 @@
 #'
 #' @examples
 
-cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE,
-                       cpc.method = c("stepwise", "Flury", "CAP", "None"),
+cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE, log.dat = NULL,
+                       cpc.method = c("stepwise", "Flury", "CAP", "none"),
                        cpc.k = dim(dat)[1],
                        err.method = c("log-CovBat", "log-ComBat", "ComBat",
                                       "CovBat",
                                       "PC-ComBat", "log-PC-ComBat",
-                                      "remove", "None"),
+                                      "remove", "none"),
                        method = c("ComBat", "log-ComBat", "None"),
                        force.PD = c(FALSE, FALSE), to.corr = c(FALSE, FALSE),
                        cpc.cap.oc = FALSE) {
@@ -90,9 +90,6 @@ cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE,
       }
       cpcs$norm.percent = mean(1 - apply(dat_err, 3, norm, "f")/
                                  apply(dat, 3, norm, "f"))
-    },
-    "default" = {
-      # placeholder for now
     },
     {
       cpcs <- NULL
@@ -192,6 +189,9 @@ cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE,
       })
   }
 
+  if (log.input) {
+    dat_out <- array(apply(dat_out, 3, expm, "R_Eigen"), dim(dat_out))
+  }
   if (force.PD[2]) {
     dat_out <- array(apply(dat_out, 3, function(x) {
       as.numeric(nearPD(x)$mat)
@@ -199,9 +199,6 @@ cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE,
   }
   if (to.corr[2]) {
     dat_out <- array(apply(dat_out, 3, cov2cor), dim(dat_out))
-  }
-  if (log.input) {
-    dat_out <- array(apply(dat_out, 3, expm, "R_Eigen"), dim(dat_out))
   }
 
   list(dat.out = dat_out,
