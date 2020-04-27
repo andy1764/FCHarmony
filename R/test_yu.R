@@ -2,22 +2,22 @@
 #' Refer to the 2018 paper for further details:
 #' \url{https://doi.org/10.1002/hbm.24241}
 #'
-#' @param raw
-#' @param out
+#' @param ...
 #' @param bat
 #'
 #' @return
-#' @import igraph doParallel foreach
+#' @import igraph doParallel glassoFast
 #' @importFrom brainGraph efficiency
 #' @importFrom stats kruskal.test p.adjust prcomp lm
 #' @importFrom Matrix rowSums
 #' @export
 #'
 #' @examples
-test_yu <- function(..., bat = NULL, net.rois = 1:dim(raw)[3],
+test_yu <- function(..., bat = NULL, net.rois = NULL,
                     net.cov = NULL, threshold = NULL, labs = c("Raw", "Out"),
-                    p.method = "BH",
-                    to.corr = TRUE, net.only = TRUE) {
+                    p.method = "BH", net.method = c("corr", "pcorr", "glasso"),
+                    net.weighted = TRUE, net.only = TRUE,
+                    glasso.rho = NULL, out.graphs = FALSE) {
   if (is.null(bat)) {stop("Need to specify batch")}
   dat <- list(...)
   L <- length(dat)
@@ -29,9 +29,6 @@ test_yu <- function(..., bat = NULL, net.rois = 1:dim(raw)[3],
   labs <- labs[1:L]
   names(dat) <- labs
 
-  if (to.corr) {
-    dat <- lapply(dat, function(x) array(apply(x, 3, cov2cor), dim(x)))
-  }
   all_vec <- lapply(dat, function(x)
     t(apply(x, 3, function(y) c(y[lower.tri(y)]))))
 
@@ -46,20 +43,48 @@ test_yu <- function(..., bat = NULL, net.rois = 1:dim(raw)[3],
   }
 
   ## Network measure associated with known covariate ####
-  # using brainGraph
+  switch(
+    net.method,
+    "corr" = {
+      dat <- lapply(dat, function(x) array(apply(x, 3, cov2cor), dim(x)))
+    },
+    "pcorr" = {
+      dat <- lapply(dat, function(x) array(apply(x, 3, corr2pcor), dim(x)))
+    },
+    "glasso" = {
+      # TODO: work on tuning parameter selection
+      if (is.null(glasso.rho)) {stop("Need to select tuning parameter")}
+      dat <- lapply(dat, function(x)
+        array(apply(x, 3, function(y) {
+          wi <- -glassoFast(y, glasso.rho)$wi
+          diag(wi) <- -diag(wi)
+          cov2cor(wi)
+        }), dim(x)))
+    }
+  )
+
+  # if threshold specified, remove edges with corr/partial corr below thres
   if (!is.null(threshold)) {
-    gr <- lapply(dat, function(x)
-      lapply(1:dim(x)[3], function(i) {
-        x[,,i] <- abs(x[,,i])
-        x[,,i][x[,,i] <= threshold] <- 0
-        graph_from_adjacency_matrix(
-          x[,,i], mode = "undirected", diag = FALSE, weighted = TRUE)
-        }))
-  } else {
-    gr <- lapply(dat, function(x)
-      lapply(1:dim(x)[3], function(i) graph_from_adjacency_matrix(
-        abs(x[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)))
+    dat <- lapply(dat, function(x)
+      array(apply(x, 3, function(y) {
+        ay <- abs(y)
+        y[ay <= threshold] <- 0
+      }), dim(x)))
   }
+
+  # if unweighted, convert to unweighted adjacency matrices
+  if (is.null(net.weighted)) {
+    dat <- lapply(dat, function(x)
+      array(apply(x, 3, function(y) {
+        y <- abs(y)
+        y[y > 0] <- 1
+      }), dim(x)))
+  }
+
+  # using brainGraph
+  gr <- lapply(dat, function(x)
+    lapply(1:dim(x)[3], function(i) graph_from_adjacency_matrix(
+      abs(x[,,i]), mode = "undirected", diag = FALSE, weighted = TRUE)))
   nodal <- lapply(gr, sapply, efficiency, "nodal")
   global <- lapply(nodal, colMeans)
 
@@ -104,6 +129,8 @@ test_yu <- function(..., bat = NULL, net.rois = 1:dim(raw)[3],
     net_res[,5:6] <- t(sapply(lm_local, net_summary))
   }
 
+  if (!out.graphs) {gr <- NULL}
+
   list(
     fc.kw.adj = kw_p_adj,
     fc.kw.p = kw_p,
@@ -112,6 +139,7 @@ test_yu <- function(..., bat = NULL, net.rois = 1:dim(raw)[3],
     eff.res = (list(nodal.eff = nodal,
                     local.eff = local,
                     global.eff = global,
-                    local.sum = local_sum))
+                    local.sum = local_sum)),
+    graphs = gr # temporary, for testing
   )
 }

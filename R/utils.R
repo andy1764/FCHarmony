@@ -50,6 +50,13 @@ corr2con <- function(corr, dims = NULL) {
   out
 }
 
+# convert correlation matrix to partial correlation matrix
+corr2pcor <- function(cor) {
+  inv <- -solve(cor)
+  diag(inv) <- -diag(inv)
+  cov2cor(inv)
+}
+
 # get matrix logarithm of SPD matrix
 logm_eig <- function(x) {
   eig <- eigen(x, symmetric = TRUE)

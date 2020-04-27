@@ -9,6 +9,7 @@ cpcharmony(
   bat,
   mod = NULL,
   log.input = FALSE,
+  log.dat = NULL,
   cpc.method = c("stepwise", "Flury", "CAP", "none"),
   cpc.k = dim(dat)[1],
   err.method = c("log-CovBat", "log-ComBat", "ComBat", "CovBat", "PC-ComBat",

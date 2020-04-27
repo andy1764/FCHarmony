@@ -9,7 +9,8 @@ test_regress(
   bat = NULL,
   mod = NULL,
   labs = c("Raw", "Out"),
-  tests = c("Elem", "Group", "Seed"),
+  tests = c("Elem", "Group", "CPC"),
+  cpc.k = 15,
   fisher = TRUE,
   seed.roi = NULL,
   to.corr = FALSE
