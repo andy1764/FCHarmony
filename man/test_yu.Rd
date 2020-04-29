@@ -17,11 +17,15 @@ test_yu(
   net.method = c("corr", "pcorr", "glasso"),
   net.weighted = TRUE,
   net.only = TRUE,
-  glasso.rho = NULL
+  glasso.rho = NULL,
+  out.graphs = FALSE
 )
 }
 \arguments{
-\item{bat}{}
+\item{threshold}{Function that takes adjacency matrix input and returns an
+adjacency matrix with thresholded values. Examples include `x > 0.5` for
+right-tail thresholding and `x[x <= 0.5] = 0; x` for right-tail thresholding
+while keeping weights}
 }
 \value{
 

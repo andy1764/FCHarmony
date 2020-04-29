@@ -97,15 +97,13 @@ logm_eig <- function(x) {
 
 # get local efficiency, based on code from brainGraph but fixed
 # extra option to specify nodes to calculate for
-local_eff <- function (g, ind, weights = NULL, use.parallel = TRUE, A = NULL) {
+local_eff <- function (g, ind, weights = NULL, use.parallel = TRUE) {
   if (is.null(weights)) {
-    if (is.null(A)) {
-      A <- as_adj(g, names = FALSE, attr = "weight")
-      weighted <- TRUE
-    }
-  } else {
-    A <- as_adj(g, names = FALSE, sparse = FALSE)
+    A <- as_adj(g, names = FALSE)
     weighted <- NULL
+  } else {
+    A <- as_adj(g, names = FALSE, attr = "weight")
+    weighted <- TRUE
   }
   eff <- rep(0, nrow(A))
   nodes <- which(rowSums((A > 0) + 0) > 1)
@@ -122,14 +120,14 @@ local_eff <- function (g, ind, weights = NULL, use.parallel = TRUE, A = NULL) {
         {
           g.sub <- graph_from_adjacency_matrix(A[X[[i]],
                                                  X[[i]]], mode = "undirected", weighted = weighted)
-          efficiency(g.sub, "global", weights = weights)
+          efficiency(g.sub, "global")
         }
     }
     else {
       for (i in nodes) {
         g.sub <- graph_from_adjacency_matrix(A[X[[i]],
                                                X[[i]]], mode = "undirected", weighted = weighted)
-        eff[i] <- efficiency(g.sub, "global", weights = weights)
+        eff[i] <- efficiency(g.sub, "global")
       }
     }
   }

@@ -4,6 +4,10 @@
 #'
 #' @param ...
 #' @param bat
+#' @param threshold Function that takes adjacency matrix input and returns an
+#' adjacency matrix with thresholded values. Examples include `x > 0.5` for
+#' right-tail thresholding and `x[x <= 0.5] = 0; x` for right-tail thresholding
+#' while keeping weights
 #'
 #' @return
 #' @import igraph doParallel glassoFast
@@ -63,21 +67,22 @@ test_yu <- function(..., bat = NULL, net.rois = NULL,
     }
   )
 
-  # if threshold specified, remove edges with corr/partial corr below thres
+  # if threshold specified, remove edges using threshold function
   if (!is.null(threshold)) {
     dat <- lapply(dat, function(x)
       array(apply(x, 3, function(y) {
-        ay <- abs(y)
-        y[ay <= threshold] <- 0
+        y[threshold(y)] <- 1
+        y[!threshold(y)] <- 0
       }), dim(x)))
   }
 
   # if unweighted, convert to unweighted adjacency matrices
-  if (is.null(net.weighted)) {
+  if (!net.weighted) {
     dat <- lapply(dat, function(x)
       array(apply(x, 3, function(y) {
         y <- abs(y)
         y[y > 0] <- 1
+        y
       }), dim(x)))
   }
 
