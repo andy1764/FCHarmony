@@ -43,7 +43,7 @@ cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE, log.dat = NULL,
                                       "remove", "none"),
                        method = c("ComBat", "log-ComBat", "None"),
                        force.PD = c(FALSE, FALSE), to.corr = c(FALSE, FALSE),
-                       cpc.cap.oc = FALSE) {
+                       cpc.cap.oc = FALSE, debug = FALSE) {
   bat <- droplevels(bat)
   try(cpc.method <- match.arg(cpc.method))
   try(err.method <- match.arg(err.method))
@@ -199,6 +199,15 @@ cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE, log.dat = NULL,
   }
   if (to.corr[2]) {
     dat_out <- array(apply(dat_out, 3, cov2cor), dim(dat_out))
+  }
+
+  # remove unnecessary arrays if not debug
+  if (!debug) {
+    dat_err <- NULL
+    dat <- NULL
+    cpcs <- NULL
+    cpc_harmony <- NULL
+    err_harmony <- NULL
   }
 
   list(dat.out = dat_out,

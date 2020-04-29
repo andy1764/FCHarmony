@@ -37,7 +37,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
                                      "part.coeff"),
                      threshold = NULL,
                      mod.clust = cluster_louvain,
-                     weighted = TRUE, glasso.rho = NULL, out.graphs = FALSE) {
+                     weighted = TRUE, glasso.rho = NULL, debug = FALSE) {
   if (is.null(bat)) {stop("Need to specify batch")}
   dat <- list(...)
   L <- length(dat)
@@ -97,10 +97,22 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
     dat_g <- lapply(dat, function(x)
       array(apply(x, 3, function(y) {
         thr <- threshold(y[lower.tri(y)])
-        thr + t(thr)
+        out <- matrix(0, dim(x), dim(x))
+        out[lower.tri(out)] <- thr
+        out + t(out)
       }), dim(x)))
   } else {
     dat_g <- dat
+  }
+
+  # if unweighted, every non-zero element should be 1 to indicate one edge
+  if (is.null(weighted)) {
+    dat_g <- lapply(dat_g, function(x)
+      array(apply(x, 3, function(y) {
+        y[y > 0] <- 1
+        y[y < 0] <- 1
+        y
+      }), dim(x)))
   }
 
   ## Form graphs
@@ -135,7 +147,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
         lm_glob <- lapply(global, function(x) lm(x ~ net.cov))
         lm_all$global <- lm_glob
         out <- t(sapply(lm_glob, net_summary))
-        dimnames(out) <- list(NULL, c("Global.r2", "Global.p"))
+        dimnames(out) <- list(labs, c("Global.r2", "Global.p"))
         all_cov <- c(all_cov, list(out))
       }
     },
@@ -154,7 +166,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
         lm_local <- lapply(local_sum, function(x) lm(x ~ net.cov))
         lm_all$local <- lm_local
         out <- t(sapply(lm_local, net_summary))
-        dimnames(out) <- list(NULL, c("Local.r2", "Local.p"))
+        dimnames(out) <- list(labs, c("Local.r2", "Local.p"))
         all_cov <- c(all_cov, list(out))
       }
     },
@@ -174,7 +186,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
         lm_within <- lapply(within, function(x) lm(x ~ net.cov))
         lm_all$within <- lm_within
         out <- t(sapply(lm_within, net_summary))
-        dimnames(out) <- list(NULL, c("Within.r2", "Within.p"))
+        dimnames(out) <- list(labs, c("Within.r2", "Within.p"))
         all_cov <- c(all_cov, list(out))
       }
     },
@@ -190,7 +202,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
         lm_modul <- lapply(modul, function(x) lm(x ~ net.cov))
         lm_all$modularity <- lm_modul
         out <- t(sapply(lm_modul, net_summary))
-        dimnames(out) <- list(NULL, c("Mod.r2", "Mod.p"))
+        dimnames(out) <- list(labs, c("Mod.r2", "Mod.p"))
         all_cov <- c(all_cov, list(out))
       }
     },
@@ -207,11 +219,17 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
         lm_part <- lapply(part, function(x) lm(x ~ net.cov))
         lm_all$part.coeff <- lm_part
         out <- t(sapply(lm_part, net_summary))
-        dimnames(out) <- list(NULL, c("Part.Coeff.r2", "Part.Coeff.p"))
+        dimnames(out) <- list(labs, c("Part.Coeff.r2", "Part.Coeff.p"))
         all_cov <- c(all_cov, list(out))
       }
     }
     )
+
+  if (!debug) {
+    met_all <- NULL
+    lm_all <- NULL
+    gr <- NULL
+  }
 
   list(
     net.results = do.call(cbind, all_cov),
