@@ -39,7 +39,7 @@ test_regress <- function(..., bat = NULL, mod = NULL,
 
   cov_p_mat <- list()
   grp_p_mat <- list()
-  cpc_p_mat <-
+  cpc_p_mat <- list()
 
   if ("Elem" %in% tests) {
     vec <- lapply(dat, function(x) t(apply(x, 3, function(x) c(x[lower.tri(x, diag = FALSE)]))))
@@ -85,15 +85,21 @@ test_regress <- function(..., bat = NULL, mod = NULL,
   }
   if ("CPC" %in% tests) {
     all_cpc <- lapply(dat, cpc, k = cpc.k)
-    cpc_p <- lapply(all_cpc, function(x) {
+    cpc_reg <- lapply(all_cpc, function(x) {
       lapply(1:dim(x$D)[1], function(y) {
-        summary(glm(x$D[y,] ~ mod[,-1], family = Gamma(link = "log")))
+        glm(x$D[y,] ~ cbind(mod[,-1], bat), family = gaussian(link = "log"))
       })
     })
+    cpc_p <- lapply(cpc_reg, lapply, function(x) summary(x)$coefficients[-1,4])
+    cpc_p_mat <- lapply(cpc_p, function(x)
+      matrix(do.call(rbind, x), length(x), ncol(mod),
+             dimnames = list(1:length(x), c(colnames(mod)[-1], "bat"))))
   }
 
   list(
     elem.p = cov_p_mat,
-    group.p = grp_p_mat
+    group.p = grp_p_mat,
+    cpc.p = cpc_p_mat,
+    cpc.reg <- cpc_reg
   )
 }

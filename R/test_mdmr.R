@@ -27,7 +27,7 @@ test_mdmr <- function(..., bat = NULL, mod = NULL,
                       tests = c("MDMR", "MDMR-C", "MDMR-L"),
                       metric = "E", lap.thr = 0.25, lap.gam = 0.01,
                       mdmr.perm = NULL, mdmr.nperm = 10000,
-                      GPU.dist = FALSE) {
+                      GPU.dist = FALSE, debug = FALSE) {
   if (is.null(bat)) {stop("Need to specify batch")}
   dat <- list(...)
   L <- length(dat)
@@ -64,6 +64,7 @@ test_mdmr <- function(..., bat = NULL, mod = NULL,
 
   bat <- droplevels(bat)
   all_out <- list()
+  res_all <- list()
 
   if ("MDMR" %in% tests) {
     if (metric == "E") {
@@ -80,6 +81,7 @@ test_mdmr <- function(..., bat = NULL, mod = NULL,
         mdmr(data.frame(covt_mod[,-1], bat), D = x,
              perm.p = mdmr.perm, seed = 8888))
     }
+    res_all$MDMR <- mdmr_res
 
     mdmr_out <- do.call(rbind, sapply(mdmr_res, getElement, "pv"))
     dimnames(mdmr_out) <- list(labs, rownames(mdmr_res[[1]]$pv))
@@ -100,6 +102,7 @@ test_mdmr <- function(..., bat = NULL, mod = NULL,
         mdmr(data.frame(covt_mod[,-1], bat), D = x,
              perm.p = mdmr.perm, seed = 8888))
     }
+    res_all$MDMR-C <- mdmr_res
 
     mdmr_out <- do.call(rbind, sapply(mdmr_res, getElement, "pv"))
     dimnames(mdmr_out) <- list(labs, paste0(rownames(mdmr_res[[1]]$pv), ".Corr"))
@@ -120,10 +123,18 @@ test_mdmr <- function(..., bat = NULL, mod = NULL,
         mdmr(data.frame(covt_mod[,-1], bat), D = x,
              perm.p = mdmr.perm, nperm = mdmr.nperm, seed = 8888))
     }
+    res_all$MDMR-L <- mdmr_res
 
     mdmr_out <- do.call(rbind, sapply(mdmr_res, getElement, "pv"))
     dimnames(mdmr_out) <- list(labs, paste0(rownames(mdmr_res[[1]]$pv), ".Lapl"))
     all_out = c(all_out, list(mdmr_out))
   }
-  do.call(cbind, all_out)
+
+  if (debug) {
+    list(res = do.call(cbind, all_out),
+         MDMR.res = res_all)
+  } else {
+    return(do.call(cbind, all_out))
+  }
+
 }

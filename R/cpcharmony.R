@@ -94,6 +94,7 @@ cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE, log.dat = NULL,
     {
       cpcs <- NULL
     })
+  dat_err_raw <- dat_err
 
   #### Harmonization of error matrices ####
   switch(
@@ -202,18 +203,15 @@ cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE, log.dat = NULL,
   }
 
   # remove unnecessary arrays if not debug
-  if (!debug) {
-    dat_err <- NULL
-    dat <- NULL
-    cpcs <- NULL
-    cpc_harmony <- NULL
-    err_harmony <- NULL
+  if (debug) {
+    list(dat.out = dat_out,
+         dat.err.raw <- dat_err_raw,
+         dat.err = dat_err,
+         dat.in = dat,
+         cpcs = cpcs,
+         cpc.harmony = cpc_harmony,
+         err.harmony = err_harmony)
+  } else {
+    list(dat.out = dat_out)
   }
-
-  list(dat.out = dat_out,
-       dat.err = dat_err,
-       dat.in = dat,
-       cpcs = cpcs,
-       cpc.harmony = cpc_harmony,
-       err.harmony = err_harmony)
 }

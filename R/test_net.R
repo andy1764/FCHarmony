@@ -35,7 +35,8 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
                      net.method = c("corr", "pcorr", "glasso"),
                      net.metrics = c("global", "local", "within", "modularity",
                                      "part.coeff"),
-                     threshold = NULL,
+                     kw.p = FALSE,
+                     threshold = NULL, fisher = TRUE,
                      mod.clust = cluster_louvain,
                      weighted = TRUE, glasso.rho = NULL, debug = FALSE) {
   if (is.null(bat)) {stop("Need to specify batch")}
@@ -105,6 +106,11 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
     dat_g <- dat
   }
 
+  if (fisher) {
+    dat_g <- lapply(dat_g, function(x)
+      array(apply(x, 3, atanh), dim(x)))
+  }
+
   # if unweighted, every non-zero element should be 1 to indicate one edge
   if (is.null(weighted)) {
     dat_g <- lapply(dat_g, function(x)
@@ -122,7 +128,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
 
   #### Calculate network measures ####
   # Take first covariate as covariate of interest to report r^2 and p
-  net_summary <- function(x) c(summary(x)$r.squared,
+  net_summary <- function(x) c(summary(x)$coefficients[2,1],
                                summary(x)$coefficients[2,4])
 
   met_all <- NULL
@@ -135,107 +141,167 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
     "global" = {
       nodal <- lapply(gr, sapply, efficiency, "nodal")
       global <- lapply(nodal, colMeans)
-      # KW test for association with site
-      glob_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
-
       met_all$nodal <- nodal
       met_all$global <- global
-      all_site <- c(all_site, list("Global.p" = unlist(glob_p)))
+
+      metric <- global
+      net_lab <- "Global"
 
       if (!is.null(net.cov)) {
         # Linear model for association with covariates
-        lm_glob <- lapply(global, function(x) lm(x ~ net.cov))
-        lm_all$global <- lm_glob
-        out <- t(sapply(lm_glob, net_summary))
-        dimnames(out) <- list(labs, c("Global.r2", "Global.p"))
+        lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
+        lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
+        bat_p <- lapply(unique(names(dat)), function(x)
+          anova(lm_mat[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+
+        lm_all$global <- lm_met_bat
+        out <- t(sapply(lm_met_bat, net_summary))
+        dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
         all_cov <- c(all_cov, list(out))
       }
+
+      # KW test for association with site
+      if (kw.p) {
+        bat_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
+      }
+
+      out_site <- list(unlist(bat_p))
+      names(out_site) <- paste(net_lab, "p", sep=".")
+      all_site <- c(all_site, out_site)
     },
     "local" = {
       local <- lapply(gr, sapply, local_eff, net.rois, weighted)
       local_sum <- lapply(local, colSums)
-      # KW test for association with site
-      local_p <- lapply(local_sum, function(x) kruskal.test(x, bat)$p.value)
-
       met_all$local <- local
       met_all$local.sum <- local_sum
-      all_site <- c(all_site, list("Local.p" = unlist(local_p)))
+
+      metric <- local_sum
+      net_lab <- "Local"
 
       if (!is.null(net.cov)) {
         # Linear model for association with covariates
-        lm_local <- lapply(local_sum, function(x) lm(x ~ net.cov))
-        lm_all$local <- lm_local
-        out <- t(sapply(lm_local, net_summary))
-        dimnames(out) <- list(labs, c("Local.r2", "Local.p"))
+        lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
+        lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
+        bat_p <- lapply(unique(names(dat)), function(x)
+          anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+
+        lm_all$global <- lm_met_bat
+        out <- t(sapply(lm_met_bat, net_summary))
+        dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
         all_cov <- c(all_cov, list(out))
       }
+
+      # KW test for association with site
+      if (kw.p) {
+        bat_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
+      }
+
+      out_site <- list(unlist(bat_p))
+      names(out_site) <- paste(net_lab, "p", sep=".")
+      all_site <- c(all_site, out_site)
     },
     "within" = {
       # use z-transformed correlation values
       dat_net <- lapply(dat, function(x) atanh(x[net.rois, net.rois,]))
       # within-network connectivity, average of FC values within
       within <- lapply(dat_net, function(x) apply(x, 3, mean))
-      # KW test for association with site
-      within_p <- lapply(within, function(x) kruskal.test(x, bat)$p.value)
-
       met_all$within <- within
-      all_site <- c(all_site, list("Within.p" = unlist(within_p)))
+
+      metric <- within
+      net_lab <- "Within"
 
       if (!is.null(net.cov)) {
         # Linear model for association with covariates
-        lm_within <- lapply(within, function(x) lm(x ~ net.cov))
-        lm_all$within <- lm_within
-        out <- t(sapply(lm_within, net_summary))
-        dimnames(out) <- list(labs, c("Within.r2", "Within.p"))
+        lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
+        lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
+        bat_p <- lapply(unique(names(dat)), function(x)
+          anova(lm_mat[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+
+        lm_all$global <- lm_met_bat
+        out <- t(sapply(lm_met_bat, net_summary))
+        dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
         all_cov <- c(all_cov, list(out))
       }
+
+      # KW test for association with site
+      if (kw.p) {
+        bat_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
+      }
+
+      out_site <- list(unlist(bat_p))
+      names(out_site) <- paste(net_lab, "p", sep=".")
+      all_site <- c(all_site, out_site)
     },
     "modularity" = {
       modul <- lapply(gr, sapply, function(x) modularity(mod.clust(x)))
-      modul_p <- lapply(modul, function(x) kruskal.test(x, bat)$p.value)
-
       met_all$modularity <- modul
-      all_site <- c(all_site, list("Mod.p" = unlist(modul_p)))
+
+      metric <- modul
+      net_lab <- "Modul"
 
       if (!is.null(net.cov)) {
         # Linear model for association with covariates
-        lm_modul <- lapply(modul, function(x) lm(x ~ net.cov))
-        lm_all$modularity <- lm_modul
-        out <- t(sapply(lm_modul, net_summary))
-        dimnames(out) <- list(labs, c("Mod.r2", "Mod.p"))
+        lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
+        lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
+        bat_p <- lapply(unique(names(dat)), function(x)
+          anova(lm_mat[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+
+        lm_all$global <- lm_met_bat
+        out <- t(sapply(lm_met_bat, net_summary))
+        dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
         all_cov <- c(all_cov, list(out))
       }
+
+      # KW test for association with site
+      if (kw.p) {
+        bat_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
+      }
+
+      out_site <- list(unlist(bat_p))
+      names(out_site) <- paste(net_lab, "p", sep=".")
+      all_site <- c(all_site, out_site)
     },
     "part.coeff" = {
       part <- lapply(gr, sapply, function(x)
         part_coeff(x, as.numeric(as.factor(roi.names)))[net.rois[1]])
-      part_p <- lapply(part, function(x) kruskal.test(x, bat)$p.value)
-
       met_all$part.coeff <- part
-      all_site <- c(all_site, list("Part.Coeff.p" = unlist(part_p)))
+
+      metric <- part
+      net_lab <- "Part.Coeff"
 
       if (!is.null(net.cov)) {
         # Linear model for association with covariates
-        lm_part <- lapply(part, function(x) lm(x ~ net.cov))
-        lm_all$part.coeff <- lm_part
-        out <- t(sapply(lm_part, net_summary))
-        dimnames(out) <- list(labs, c("Part.Coeff.r2", "Part.Coeff.p"))
+        lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
+        lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
+        bat_p <- lapply(unique(names(dat)), function(x)
+          anova(lm_mat[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+
+        lm_all$global <- lm_met_bat
+        out <- t(sapply(lm_met_bat, net_summary))
+        dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
         all_cov <- c(all_cov, list(out))
       }
+
+      # KW test for association with site
+      if (kw.p) {
+        bat_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
+      }
+
+      out_site <- list(unlist(bat_p))
+      names(out_site) <- paste(net_lab, "p", sep=".")
+      all_site <- c(all_site, out_site)
     }
     )
 
-  if (!debug) {
-    met_all <- NULL
-    lm_all <- NULL
-    gr <- NULL
+  if (debug) {
+    list(net.results = do.call(cbind, all_cov),
+         net.results.site = do.call(cbind, all_site),
+         metrics = met_all,
+         lm.res = lm_all,
+         graphs = gr)
+  } else {
+    list(net.results = do.call(cbind, all_cov),
+         net.results.site = do.call(cbind, all_site))
   }
 
-  list(
-    net.results = do.call(cbind, all_cov),
-    net.results.site = do.call(cbind, all_site),
-    metrics = met_all,
-    lm.res = lm_all,
-    graphs = gr # temporary, for testing
-  )
 }
