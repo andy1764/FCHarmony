@@ -8,12 +8,15 @@ test_regress(
   ...,
   bat = NULL,
   mod = NULL,
+  roi.names = NULL,
   labs = c("Raw", "Out"),
   tests = c("Elem", "Group", "CPC"),
+  incl.bat = TRUE,
   cpc.k = 15,
   fisher = TRUE,
   seed.roi = NULL,
-  to.corr = FALSE
+  to.corr = FALSE,
+  debug = FALSE
 )
 }
 \arguments{

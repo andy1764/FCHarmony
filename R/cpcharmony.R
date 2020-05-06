@@ -21,6 +21,7 @@
 #' \code{TRUE} imposes orthogonal constraint when identifiying higher-order PCs.
 #' @param log.input Logical, whether to use the matrix logarithm of the input.
 #' @param err.eb Logical, use empirical Bayes in error harmonization.
+#' @param cpc.eb Logical, use empirical Bayes in CPC eigenvalue harmonization.
 #' @param debug Logical, include internal objects in output.
 #'
 #' @return \code{cpcharmony} returns a list containing the following components:
@@ -47,7 +48,8 @@ cpcharmony <- function(dat, bat, mod = NULL,
                        method = c("ComBat", "log-ComBat", "None"),
                        log.input = FALSE,
                        force.PD = c(FALSE, FALSE), to.corr = c(FALSE, FALSE),
-                       cpc.cap.oc = FALSE, err.eb = TRUE,debug = FALSE) {
+                       cpc.cap.oc = FALSE, err.eb = TRUE,
+                       cpc.eb = TRUE, debug = FALSE) {
   bat <- droplevels(bat)
   try(cpc.method <- match.arg(cpc.method))
   try(err.method <- match.arg(err.method))
@@ -106,7 +108,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
     err.method,
     "ComBat" = {
       err_vec <- t(apply(dat_err, 3, function(x) c(x[lower.tri(x)])))
-      err_harmony <- combat_modded(t(err_vec), bat, mod = mod, eb = combat.eb)
+      err_harmony <- combat_modded(t(err_vec), bat, mod = mod, eb = err.eb)
       err_harm_dat <- t(err_harmony$dat.combat)
       err_out <- array(0, dim = dim(dat_err))
       for (i in 1:N) {
@@ -118,7 +120,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
     },
     "CovBat" = {
       err_vec <- t(apply(dat_err, 3, function(x) c(x[lower.tri(x)])))
-      err_harmony <- covbat(t(err_vec), bat, mod = mod, eb = combat.eb)
+      err_harmony <- covbat(t(err_vec), bat, mod = mod, eb = err.eb)
       err_harm_dat <- t(err_harmony$dat.covbat)
       err_out <- array(0, dim = dim(dat_err))
       for (i in 1:N) {
@@ -143,12 +145,12 @@ cpcharmony <- function(dat, bat, mod = NULL,
       dat_err = err_harmony$dat.covbat
     },
     "log-CovBat" = {
-      err_harmony = log_covbat(dat_err, bat, mod = mod, eb = combat.eb)
+      err_harmony = log_covbat(dat_err, bat, mod = mod, eb = err.eb)
       dat_err = err_harmony$dat.out
     },
     "log-ComBat" = {
       # Vectorize matrix log then harmonize element-wise via ComBat
-      err_harmony = log_combat(dat_err, bat, mod = mod, eb = combat.eb)
+      err_harmony = log_combat(dat_err, bat, mod = mod, eb = err.eb)
       dat_err = err_harmony$dat.out
     },
     "remove" = {
@@ -169,7 +171,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
     switch(
       method,
       "ComBat" = {
-        cpc_harmony <- combat_modded(cpcs$D, bat, mod = mod)
+        cpc_harmony <- combat_modded(cpcs$D, bat, mod = mod, eb = cpc.eb)
         for (i in 1:N) {
           dat_out[,,i] <- dat_err[,,i] # add back error
           for (j in 1:cpc.k) {
@@ -179,7 +181,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
         }
       },
       "log-ComBat" = {
-        cpc_harmony <- combat_modded(log(cpcs$D), bat, mod = mod)
+        cpc_harmony <- combat_modded(log(cpcs$D), bat, mod = mod, eb = cpc.eb)
         for (i in 1:N) {
           dat_out[,,i] <- dat_err[,,i] # add back error
           for (j in 1:cpc.k) {

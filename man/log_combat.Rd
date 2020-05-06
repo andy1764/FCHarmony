@@ -4,7 +4,7 @@
 \alias{log_combat}
 \title{Harmonization using ComBat on log-transformed matrices}
 \usage{
-log_combat(x, bat, mod = NULL, input.pd = FALSE)
+log_combat(x, bat, mod = NULL, eb = TRUE, input.pd = FALSE)
 }
 \arguments{
 \item{input.pd}{}

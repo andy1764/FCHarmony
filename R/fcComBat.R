@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-fcComBat =  function(x, bat, mod = NULL, to.corr = TRUE, out.pd = FALSE) {
+fcComBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE, out.pd = FALSE) {
   N <- dim(x)[3] # store number of obs
   dnames <- dimnames(x)
   bat <- droplevels(bat)
@@ -24,7 +24,7 @@ fcComBat =  function(x, bat, mod = NULL, to.corr = TRUE, out.pd = FALSE) {
   }
 
   vec <- atanh(t(apply(x, 3, function(m) c(m[lower.tri(m)]))))
-  com_out <- combat_modded(t(vec), bat, mod = mod)
+  com_out <- combat_modded(t(vec), bat, mod = mod, eb = eb)
   com_dat <- tanh(t(com_out$dat.combat))
   out <- array(0, dim = dim(x))
   for (i in 1:N) {

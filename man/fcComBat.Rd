@@ -4,7 +4,7 @@
 \alias{fcComBat}
 \title{Functional connectivity ComBat}
 \usage{
-fcComBat(x, bat, mod = NULL, to.corr = TRUE, out.pd = FALSE)
+fcComBat(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE, out.pd = FALSE)
 }
 \arguments{
 \item{out.pd}{}

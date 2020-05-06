@@ -293,9 +293,12 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
     }
     )
 
+  net_res_site <- do.call(cbind, all_site)
+  rownames(net_res_site) <- labs
+
   if (debug) {
     list(net.results = do.call(cbind, all_cov),
-         net.results.site = do.call(cbind, all_site),
+         net.results.site = net_res_site,
          metrics = met_all,
          lm.res = lm_all,
          graphs = gr)

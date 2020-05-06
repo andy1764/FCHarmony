@@ -8,16 +8,17 @@ cpcharmony(
   dat,
   bat,
   mod = NULL,
-  log.input = FALSE,
-  log.dat = NULL,
   cpc.method = c("stepwise", "Flury", "CAP", "none"),
   cpc.k = dim(dat)[1],
   err.method = c("log-CovBat", "log-ComBat", "ComBat", "CovBat", "PC-ComBat",
     "log-PC-ComBat", "remove", "none"),
   method = c("ComBat", "log-ComBat", "None"),
+  log.input = FALSE,
   force.PD = c(FALSE, FALSE),
   to.corr = c(FALSE, FALSE),
   cpc.cap.oc = FALSE,
+  err.eb = TRUE,
+  cpc.eb = TRUE,
   debug = FALSE
 )
 }
@@ -40,16 +41,24 @@ or "fc-Combat"}
 \item{method}{Method for harmonization. One of "likelihood", "log-ComBat",
 "ComBat". Currently only ComBat supported.}
 
+\item{log.input}{Logical, whether to use the matrix logarithm of the input.}
+
 \item{force.PD}{Logical vector. First element indicates whether input should
 be forced to be positive definite using \link[Matrix]{nearPD}, second for
-output}
+output.}
 
 \item{to.corr}{Logical vector. First element indicates whether input should
 be forced to be a correlation matrix using  \link[stats]{cov2cor}, second
-for output}
+for output.}
 
 \item{cpc.cap.oc}{Logical, only used if \code{cpc.method = "CAP"}, if
 \code{TRUE} imposes orthogonal constraint when identifiying higher-order PCs.}
+
+\item{err.eb}{Logical, use empirical Bayes in error harmonization.}
+
+\item{cpc.eb}{Logical, use empirical Bayes in CPC eigenvalue harmonization.}
+
+\item{debug}{Logical, include internal objects in output.}
 }
 \value{
 \code{cpcharmony} returns a list containing the following components:

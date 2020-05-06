@@ -8,6 +8,7 @@ log_covbat(
   x,
   bat,
   mod = NULL,
+  eb = TRUE,
   covbat.var = 0.9,
   mean.only = FALSE,
   score.eb = FALSE,
