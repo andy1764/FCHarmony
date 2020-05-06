@@ -107,7 +107,7 @@ test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
       grp_rois <- list(grp_rois, grp_rois)
       dat_grouped <- lapply(dat, function(x) {
         rois <- sort(unique(dimnames(x)[[1]]))
-        array(apply(x, 3, corr2con, fisher), dim = c(length(rois), length(rois),
+        array(apply(x, 3, corr2con, fisher = fisher), dim = c(length(rois), length(rois),
                                              dim(x)[3]),
               dimnames = list(rois, rois, NULL))
       })
