@@ -107,13 +107,12 @@ test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
       grp_rois <- list(grp_rois, grp_rois)
       dat_grouped <- lapply(dat, function(x) {
         rois <- sort(unique(dimnames(x)[[1]]))
-        array(apply(x, 3, corr2con), dim = c(length(rois), length(rois),
+        array(apply(x, 3, corr2con, fisher), dim = c(length(rois), length(rois),
                                              dim(x)[3]),
               dimnames = list(rois, rois, NULL))
       })
       vec <- lapply(dat_grouped, function(x)
         t(apply(x, 3, function(x) c(x[lower.tri(x, diag = TRUE)]))))
-      if (fisher) {vec <- lapply(vec, atanh)}
 
       # get full linear model
       grp_reg <- lapply(vec, function(x) {

@@ -31,7 +31,8 @@ cov2lap <- function(cov, threshold = 0.5, gamma = 0.01) {
 }
 
 # convert correlation matrix to connectivity values grouped by ROI
-corr2con <- function(corr, dims = NULL) {
+corr2con <- function(corr, dims = NULL, fisher = TRUE) {
+  if (fisher) {corr <- atanh(corr)}
   diag(corr) <- 0 # ignore diagonal to get avg connectivities
   if (is.null(dims)) {dims <- dimnames(corr)}
   rois <- sort(unique(dims[[1]]))
