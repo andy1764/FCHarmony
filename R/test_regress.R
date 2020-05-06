@@ -12,7 +12,7 @@
 #' @export
 #'
 #' @examples
-test_regress <- function(..., bat = NULL, mod = NULL,
+test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
                       labs = c("Raw", "Out"),
                       tests = c("Elem", "Group", "CPC"),
                       incl.bat = TRUE, # include batch in the model
@@ -42,8 +42,13 @@ test_regress <- function(..., bat = NULL, mod = NULL,
     mods <- colnames(mod)[-1]
   }
 
-
-  roi_names <- dimnames(dat[[1]])[1:2]
+  # if no ROI names specified, take from first dataset
+  # otherwise, replace dimnames across all datasets with the ROI names
+  if (is.null(roi.names)) {
+    roi.names <- dimnames(dat[[1]])[1:2]
+  } else {
+    dat <- lapply(dat, function(x) {dimnames(x)[1:2] <- roi.names; x})
+  }
 
   cov_p_mat <- list()
   grp_p_mat <- list()
@@ -83,14 +88,14 @@ test_regress <- function(..., bat = NULL, mod = NULL,
       elem_p <- lapply(elem_reg, sapply, function(x) anova(x)$'Pr(>F)'[1])
 
       # arrange as matrices
-      cov_p_mat$all <- lapply(elem_p, vec2corr, roi_names)
-      cov_p_mat$bat <- lapply(bat_p, vec2corr, roi_names)
+      cov_p_mat$all <- lapply(elem_p, vec2corr, roi.names)
+      cov_p_mat$bat <- lapply(bat_p, vec2corr, roi.names)
 
       for (cov in mods) {
         i <- which(mods == cov)
         cov_p <- lapply(elem_reg, sapply,
                         function(x) summary(x)$coefficients[i+1, 4])
-        cov_p_mat[[cov]] <- lapply(cov_p, vec2corr, roi_names)
+        cov_p_mat[[cov]] <- lapply(cov_p, vec2corr, roi.names)
       }
 
       out$elem.p <- cov_p_mat

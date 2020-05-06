@@ -19,6 +19,7 @@
 log_covbat <- function(x, # array of fc matrices, roi x roi x nsubj
                        bat, # vector of batch numbers
                        mod = NULL, # model matrix
+                       eb = TRUE,
                        covbat.var = 0.90, # percent of variation explained that determines number of scores to correct
                        mean.only = FALSE, # scale parameter in initial ComBat, works better with scaling
                        score.eb = FALSE, # empirical Bayes for scores
@@ -39,7 +40,7 @@ log_covbat <- function(x, # array of fc matrices, roi x roi x nsubj
   }
 
   # ComBat to remove site effect in scores
-  scores_com <- covbat(t(v_vec), bat, eb = score.eb, mod = mod,
+  scores_com <- covbat(t(v_vec), bat, eb = eb, score.eb = score.eb, mod = mod,
                        percent.var = covbat.var)
   est_covbat <- t(scores_com$dat.covbat)
 
