@@ -15,7 +15,8 @@ test_mdmr(
   lap.gam = 0.01,
   mdmr.perm = NULL,
   mdmr.nperm = 10000,
-  GPU.dist = FALSE
+  GPU.dist = FALSE,
+  debug = FALSE
 )
 }
 \arguments{

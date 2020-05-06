@@ -1,5 +1,5 @@
 # simple function to convert lower triangular entries to symmetric matrix
-vec2corr <- function(vec, names = NULL, corr = FALSE) {
+vec2corr <- function(vec, names = NULL, corr = TRUE) {
   d <- (1 + sqrt(8*length(vec)+1))/2 # dim of output
   out <- matrix(0, d, d, dimnames = names)
   out[lower.tri(out, diag=FALSE)] <- vec
@@ -32,17 +32,17 @@ cov2lap <- function(cov, threshold = 0.5, gamma = 0.01) {
 
 # convert correlation matrix to connectivity values grouped by ROI
 corr2con <- function(corr, dims = NULL) {
+  diag(corr) <- 0 # ignore diagonal to get avg connectivities
   if (is.null(dims)) {dims <- dimnames(corr)}
   rois <- sort(unique(dims[[1]]))
   p <- length(rois)
-  corr[lower.tri(corr, diag = TRUE)] <- 0
 
   out <- matrix(0, p, p, dimnames = list(rois, rois))
   for (i in 1:p) {
     ind_i <- dims[[1]] == rois[i]
     for (j in 1:i) {
       ind_j <- dims[[2]] == rois[j]
-      out[i,j] <- mean(corr[ind_i, ind_j])
+      out[i,j] <- mean(corr[ind_i, ind_j]/2) # divided by two due to symmetry
     }
   }
   out <- out + t(out)

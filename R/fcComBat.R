@@ -15,6 +15,7 @@
 #' @examples
 fcComBat =  function(x, bat, mod = NULL, to.corr = TRUE, out.pd = FALSE) {
   N <- dim(x)[3] # store number of obs
+  dnames <- dimnames(x)
   bat <- droplevels(bat)
 
   if (to.corr) {x <- array(apply(x, 3, cov2cor), dim(x))}
@@ -34,6 +35,8 @@ fcComBat =  function(x, bat, mod = NULL, to.corr = TRUE, out.pd = FALSE) {
 
   if (out.pd) {out <- array(apply(out, 3, function(x)
     as.matrix(nearPD(x, corr = TRUE)$mat)), dim(out))}
+
+  dimnames(out) <- dnames
 
   list(dat.out = out, combat.out = com_out)
 }

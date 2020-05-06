@@ -152,7 +152,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
         lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
         lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
         bat_p <- lapply(unique(names(dat)), function(x)
-          anova(lm_mat[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+          anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
 
         lm_all$global <- lm_met_bat
         out <- t(sapply(lm_met_bat, net_summary))
@@ -202,7 +202,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
     },
     "within" = {
       # use z-transformed correlation values
-      dat_net <- lapply(dat, function(x) atanh(x[net.rois, net.rois,]))
+      dat_net <- lapply(dat, function(x) atanh(x[net.rois, net.rois,])/2)
       # within-network connectivity, average of FC values within
       within <- lapply(dat_net, function(x) apply(x, 3, mean))
       met_all$within <- within
@@ -215,7 +215,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
         lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
         lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
         bat_p <- lapply(unique(names(dat)), function(x)
-          anova(lm_mat[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+          anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
 
         lm_all$global <- lm_met_bat
         out <- t(sapply(lm_met_bat, net_summary))
@@ -244,7 +244,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
         lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
         lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
         bat_p <- lapply(unique(names(dat)), function(x)
-          anova(lm_mat[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+          anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
 
         lm_all$global <- lm_met_bat
         out <- t(sapply(lm_met_bat, net_summary))
@@ -274,7 +274,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
         lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
         lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
         bat_p <- lapply(unique(names(dat)), function(x)
-          anova(lm_mat[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+          anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
 
         lm_all$global <- lm_met_bat
         out <- t(sapply(lm_met_bat, net_summary))

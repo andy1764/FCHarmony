@@ -11,14 +11,16 @@ test_net(
   bat = NULL,
   net.rois = NULL,
   net.cov = NULL,
-  threshold = NULL,
   labs = c("Raw", "Out"),
   net.method = c("corr", "pcorr", "glasso"),
   net.metrics = c("global", "local", "within", "modularity", "part.coeff"),
+  kw.p = FALSE,
+  threshold = NULL,
+  fisher = TRUE,
   mod.clust = cluster_louvain,
   weighted = TRUE,
   glasso.rho = NULL,
-  out.graphs = FALSE
+  debug = FALSE
 )
 }
 \arguments{

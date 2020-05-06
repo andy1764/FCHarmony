@@ -17,7 +17,8 @@ cpcharmony(
   method = c("ComBat", "log-ComBat", "None"),
   force.PD = c(FALSE, FALSE),
   to.corr = c(FALSE, FALSE),
-  cpc.cap.oc = FALSE
+  cpc.cap.oc = FALSE,
+  debug = FALSE
 )
 }
 \arguments{

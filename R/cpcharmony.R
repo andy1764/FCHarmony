@@ -51,6 +51,7 @@ cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE, log.dat = NULL,
 
   p <- dim(dat)[2]
   N <- dim(dat)[3]
+  dnames <- dimnames(dat)
 
   if (force.PD[1]) {
     dat <- array(apply(dat, 3, function(x) {
@@ -189,6 +190,8 @@ cpcharmony <- function(dat, bat, mod = NULL, log.input = FALSE, log.dat = NULL,
         dat_out = dat_err
       })
   }
+
+  dimnames(dat_out) <- dnames
 
   if (log.input) {
     dat_out <- array(apply(dat_out, 3, expm, "R_Eigen"), dim(dat_out))
