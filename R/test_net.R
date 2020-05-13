@@ -24,7 +24,7 @@
 #'
 #' @return
 #' @import igraph doParallel glassoFast
-#' @importFrom brainGraph efficiency part_coeff
+#' @importFrom brainGraph efficiency part_coeff gateway_coeff
 #' @importFrom stats kruskal.test p.adjust prcomp lm
 #' @importFrom Matrix rowSums
 #' @export
@@ -33,8 +33,10 @@
 test_net <- function(..., bat = NULL, net.rois = NULL,
                      net.cov = NULL, labs = c("Raw", "Out"),
                      net.method = c("corr", "pcorr", "glasso"),
-                     net.metrics = c("global", "local", "within", "modularity",
-                                     "part.coeff"),
+                     net.metrics = c("global", "local", "within", "between",
+                                     "clust.modularity", "atlas.modularity",
+                                     "gateway.coeff", "part.coeff",
+                                     "clust.coeff"),
                      kw.p = FALSE,
                      threshold = NULL, fisher = TRUE,
                      mod.clust = cluster_louvain,
@@ -95,6 +97,9 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
 
   # if threshold specified, transform edges using threshold function
   if (!is.null(threshold)) {
+    if (threshold == "positive") {
+      threshold = function(x) {x[x < 0] = 0; x}
+    }
     dat_g <- lapply(dat, function(x)
       array(apply(x, 3, function(y) {
         thr <- threshold(y[lower.tri(y)])
@@ -124,13 +129,9 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
   ## Form graphs
   gr <- lapply(dat_g, function(x)
     lapply(1:dim(x)[3], function(i) graph_from_adjacency_matrix(
-      abs(x[,,i]), mode = "undirected", diag = FALSE, weighted = weighted)))
+      x[,,i], mode = "undirected", diag = FALSE, weighted = weighted)))
 
   #### Calculate network measures ####
-  # Take first covariate as covariate of interest to report r^2 and p
-  net_summary <- function(x) c(summary(x)$coefficients[2,1],
-                               summary(x)$coefficients[2,4])
-
   met_all <- NULL
   lm_all <- NULL
   all_site <- NULL
@@ -144,30 +145,10 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       met_all$nodal <- nodal
       met_all$global <- global
 
-      metric <- global
-      net_lab <- "Global"
-
-      if (!is.null(net.cov)) {
-        # Linear model for association with covariates
-        lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
-        lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
-        bat_p <- lapply(unique(names(dat)), function(x)
-          anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
-
-        lm_all$global <- lm_met_bat
-        out <- t(sapply(lm_met_bat, net_summary))
-        dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
-        all_cov <- c(all_cov, list(out))
-      }
-
-      # KW test for association with site
-      if (kw.p) {
-        bat_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
-      }
-
-      out_site <- list(unlist(bat_p))
-      names(out_site) <- paste(net_lab, "p", sep=".")
-      all_site <- c(all_site, out_site)
+      met_out <- met_regress(global, bat, net.cov, net_lab = "Global",
+                             kw.p = kw.p)
+      all_cov <- c(all_cov, list(met_out$out.p))
+      all_site <- c(all_site, met_out$bat.p)
     },
     "local" = {
       local <- lapply(gr, sapply, local_eff, net.rois, weighted)
@@ -175,30 +156,10 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       met_all$local <- local
       met_all$local.sum <- local_sum
 
-      metric <- local_sum
-      net_lab <- "Local"
-
-      if (!is.null(net.cov)) {
-        # Linear model for association with covariates
-        lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
-        lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
-        bat_p <- lapply(unique(names(dat)), function(x)
-          anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
-
-        lm_all$global <- lm_met_bat
-        out <- t(sapply(lm_met_bat, net_summary))
-        dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
-        all_cov <- c(all_cov, list(out))
-      }
-
-      # KW test for association with site
-      if (kw.p) {
-        bat_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
-      }
-
-      out_site <- list(unlist(bat_p))
-      names(out_site) <- paste(net_lab, "p", sep=".")
-      all_site <- c(all_site, out_site)
+      met_out <- met_regress(local_sum, bat, net.cov, net_lab = "Local",
+                             kw.p = kw.p)
+      all_cov <- c(all_cov, list(met_out$out.p))
+      all_site <- c(all_site, met_out$bat.p)
     },
     "within" = {
       # use z-transformed correlation values
@@ -207,89 +168,73 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       within <- lapply(dat_net, function(x) apply(x, 3, mean))
       met_all$within <- within
 
-      metric <- within
-      net_lab <- "Within"
-
-      if (!is.null(net.cov)) {
-        # Linear model for association with covariates
-        lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
-        lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
-        bat_p <- lapply(unique(names(dat)), function(x)
-          anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
-
-        lm_all$global <- lm_met_bat
-        out <- t(sapply(lm_met_bat, net_summary))
-        dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
-        all_cov <- c(all_cov, list(out))
-      }
-
-      # KW test for association with site
-      if (kw.p) {
-        bat_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
-      }
-
-      out_site <- list(unlist(bat_p))
-      names(out_site) <- paste(net_lab, "p", sep=".")
-      all_site <- c(all_site, out_site)
+      met_out <- met_regress(within, bat, net.cov, net_lab = "Within",
+                             kw.p = kw.p)
+      all_cov <- c(all_cov, list(met_out$out.p))
+      all_site <- c(all_site, met_out$bat.p)
     },
-    "modularity" = {
-      modul <- lapply(gr, sapply, function(x) modularity(mod.clust(x)))
-      met_all$modularity <- modul
+    "between" = {
+      # use z-transformed correlation values
+      dat_net <- lapply(dat, function(x) atanh(x[net.rois, -(net.rois),])/2)
+      # between-network connectivity, average of FC values between other ROIs
+      between <- lapply(dat_net, function(x) apply(x, 3, mean))
+      met_all$between <- between
 
-      metric <- modul
-      net_lab <- "Modul"
+      met_out <- met_regress(between, bat, net.cov, net_lab = "Between",
+                             kw.p = kw.p)
+      all_cov <- c(all_cov, list(met_out$out.p))
+      all_site <- c(all_site, met_out$bat.p)
+    },
+    "clust.modularity" = {
+      cmodul <- lapply(gr, sapply, function(x) modularity(mod.clust(x)))
+      met_all$clust.modularity <- cmodul
 
-      if (!is.null(net.cov)) {
-        # Linear model for association with covariates
-        lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
-        lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
-        bat_p <- lapply(unique(names(dat)), function(x)
-          anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+      met_out <- met_regress(cmodul, bat, net.cov, net_lab = "Cl.Modul",
+                             kw.p = kw.p)
+      all_cov <- c(all_cov, list(met_out$out.p))
+      all_site <- c(all_site, met_out$bat.p)
+    },
+    "atlas.modularity" = {
+      amodul <- lapply(gr, sapply, function(x)
+        modularity(x, as.numeric(as.factor(roi.names))))
+      met_all$atlas.modularity <- amodul
 
-        lm_all$global <- lm_met_bat
-        out <- t(sapply(lm_met_bat, net_summary))
-        dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
-        all_cov <- c(all_cov, list(out))
-      }
-
-      # KW test for association with site
-      if (kw.p) {
-        bat_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
-      }
-
-      out_site <- list(unlist(bat_p))
-      names(out_site) <- paste(net_lab, "p", sep=".")
-      all_site <- c(all_site, out_site)
+      met_out <- met_regress(amodul, bat, net.cov, net_lab = "A.Modul",
+                             kw.p = kw.p)
+      all_cov <- c(all_cov, list(met_out$out.p))
+      all_site <- c(all_site, met_out$bat.p)
     },
     "part.coeff" = {
+      if (is.null(threshold)) {
+        message("Participation coefficient does not apply to complete graphs")
+        }
       part <- lapply(gr, sapply, function(x)
         part_coeff(x, as.numeric(as.factor(roi.names)))[net.rois[1]])
       met_all$part.coeff <- part
 
-      metric <- part
-      net_lab <- "Part.Coeff"
+      met_out <- met_regress(part, bat, net.cov, net_lab = "Part.Coeff",
+                             kw.p = kw.p)
+      all_cov <- c(all_cov, list(met_out$out.p))
+      all_site <- c(all_site, met_out$bat.p)
+    },
+    "gateway.coeff" = {
+      gate <- lapply(gr, sapply, function(x)
+        gateway_coeff(x, as.numeric(as.factor(roi.names)))[net.rois[1]])
+      met_all$gate.coeff <- gate
 
-      if (!is.null(net.cov)) {
-        # Linear model for association with covariates
-        lm_met <- lapply(metric, function(x) lm(x ~ net.cov))
-        lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
-        bat_p <- lapply(unique(names(dat)), function(x)
-          anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+      met_out <- met_regress(gate, bat, net.cov, net_lab = "Gate.Coeff",
+                             kw.p = kw.p)
+      all_cov <- c(all_cov, list(met_out$out.p))
+      all_site <- c(all_site, met_out$bat.p)
+    },
+    "clust.coeff" = {
+      clustc <- lapply(gr, sapply, function(x) transitivity(x))
+      met_all$clust.coeff <- clustc
 
-        lm_all$global <- lm_met_bat
-        out <- t(sapply(lm_met_bat, net_summary))
-        dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
-        all_cov <- c(all_cov, list(out))
-      }
-
-      # KW test for association with site
-      if (kw.p) {
-        bat_p <- lapply(global, function(x) kruskal.test(x, bat)$p.value)
-      }
-
-      out_site <- list(unlist(bat_p))
-      names(out_site) <- paste(net_lab, "p", sep=".")
-      all_site <- c(all_site, out_site)
+      met_out <- met_regress(clustc, bat, net.cov, net_lab = "Clust.Coeff",
+                             kw.p = kw.p)
+      all_cov <- c(all_cov, list(met_out$out.p))
+      all_site <- c(all_site, met_out$bat.p)
     }
     )
 
@@ -306,5 +251,39 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
     list(net.results = do.call(cbind, all_cov),
          net.results.site = do.call(cbind, all_site))
   }
-
 }
+
+# Helper function to regress network metric on input covariates
+met_regress <- function(metric, bat, net.cov = NULL, net_lab = NULL,
+                        kw.p = FALSE) {
+  if (!is.null(net.cov)) {
+    # Linear model for association with covariates
+    lm_met <- lapply(metric, function(x) {
+      if (any(is.nan(x))) {message("WARNING: Regression on NaN values")}
+      lm(x ~ net.cov)
+    })
+    lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
+    bat_p <- lapply(unique(names(dat)), function(x)
+      anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
+
+    lm_all$global <- lm_met_bat
+    out <- t(sapply(lm_met_bat, net_summary))
+    dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
+    all_cov <- c(all_cov, list(out))
+  }
+
+  # KW test for association with site
+  if (kw.p) {
+    bat_p <- lapply(metric, function(x) kruskal.test(x, bat)$p.value)
+  }
+
+  out_site <- list(unlist(bat_p))
+  names(out_site) <- paste(net_lab, "p", sep=".")
+
+  list(out.p = out,
+       bat.p = out_site)
+}
+
+# Helper function to summarize network linear models
+net_summary <- function(x) c(summary(x)$coefficients[2,1],
+                             summary(x)$coefficients[2,4])
