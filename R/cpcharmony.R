@@ -108,7 +108,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
     err.method,
     "ComBat" = {
       err_vec <- t(apply(dat_err, 3, function(x) c(x[lower.tri(x)])))
-      err_harmony <- combat_modded(t(err_vec), bat, mod = mod, eb = err.eb)
+      err_harmony <- combat(t(err_vec), bat, mod = mod, eb = err.eb)
       err_harm_dat <- t(err_harmony$dat.combat)
       err_out <- array(0, dim = dim(dat_err))
       for (i in 1:N) {
@@ -171,7 +171,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
     switch(
       method,
       "ComBat" = {
-        cpc_harmony <- combat_modded(cpcs$D, bat, mod = mod, eb = cpc.eb)
+        cpc_harmony <- combat(cpcs$D, bat, mod = mod, eb = cpc.eb)
         for (i in 1:N) {
           dat_out[,,i] <- dat_err[,,i] # add back error
           for (j in 1:cpc.k) {
@@ -181,7 +181,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
         }
       },
       "log-ComBat" = {
-        cpc_harmony <- combat_modded(log(cpcs$D), bat, mod = mod, eb = cpc.eb)
+        cpc_harmony <- combat(log(cpcs$D), bat, mod = mod, eb = cpc.eb)
         for (i in 1:N) {
           dat_out[,,i] <- dat_err[,,i] # add back error
           for (j in 1:cpc.k) {

@@ -39,7 +39,7 @@ pc_combat <- function(x, # array of fc matrices, roi x roi x nsubj
   scores <- v_pc$x[,1:npc]
 
   # ComBat to remove site effect in scores
-  scores_com <- combat_modded(t(scores), bat, eb = score.eb, mod = mod)
+  scores_com <- combat(t(scores), bat, eb = score.eb, mod = mod)
 
   # print(apply(t(scores_com$dat.combat)[bat == 1,], 2, mean))
   # print(apply(t(scores_com$dat.combat)[bat == 1,], 2, var))

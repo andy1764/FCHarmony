@@ -24,7 +24,7 @@ fcComBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE, out.pd = FAL
   }
 
   vec <- atanh(t(apply(x, 3, function(m) c(m[lower.tri(m)]))))
-  com_out <- combat_modded(t(vec), bat, mod = mod, eb = eb)
+  com_out <- combat(t(vec), bat, mod = mod, eb = eb)
   com_dat <- tanh(t(com_out$dat.combat))
   out <- array(0, dim = dim(x))
   for (i in 1:N) {

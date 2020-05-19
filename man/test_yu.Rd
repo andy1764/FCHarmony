@@ -23,8 +23,8 @@ test_yu(
 }
 \arguments{
 \item{threshold}{Function that takes adjacency matrix input and returns an
-adjacency matrix with thresholded values. Examples include `x > 0.5` for
-right-tail thresholding and `x[x <= 0.5] = 0; x` for right-tail thresholding
+adjacency matrix with thresholded values. Examples include \code{x > 0.5} for
+right-tail thresholding and \verb{x[x <= 0.5] = 0; x} for right-tail thresholding
 while keeping weights}
 }
 \value{

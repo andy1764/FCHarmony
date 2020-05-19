@@ -11,6 +11,7 @@ Description: Methods for harmonization of functional connectivity measures, curr
 License: Artistic License 2.0
 Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
 Imports: 
     CovBat,

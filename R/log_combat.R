@@ -32,7 +32,7 @@ log_combat <- function(x, # array of fc matrices, roi x roi x nsubj
   v_vec <- t(apply(logx, 3, function(x) c(x[lower.tri(x, diag = TRUE)])))
 
   # ComBat to remove site effect in scores
-  scores_com <- combat_modded(t(v_vec), bat, mod = mod, eb = eb)
+  scores_com <- combat(t(v_vec), bat, mod = mod, eb = eb)
   est_combat <- t(scores_com$dat.combat)
 
   out_combat <- array(0, dim = dim(x))

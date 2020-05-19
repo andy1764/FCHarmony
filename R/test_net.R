@@ -1,4 +1,5 @@
 #' Functional Connectivity Evaluations
+#'
 #' Many proposed by Meichen Yu. Refer to the 2018 paper for further details:
 #' \url{https://doi.org/10.1002/hbm.24241}
 #'
@@ -10,8 +11,7 @@
 #' while keeping weights
 #' @param mod.clust Function from `igraph` that finds communities. See
 #' \link[igraph]{membership} for options. Defaults to
-#' \link[igraph]{cluster_louvain}, which is used in the Brain Connectivity
-#' Toolbox
+#' \link[igraph]{cluster_louvain}
 #'
 #' @param net.rois
 #' @param net.cov
@@ -25,6 +25,7 @@
 #' @return
 #' @import igraph doParallel glassoFast
 #' @importFrom brainGraph efficiency part_coeff gateway_coeff
+#' @importFrom NetworkToolbox clustcoeff
 #' @importFrom stats kruskal.test p.adjust prcomp lm
 #' @importFrom Matrix rowSums
 #' @export
@@ -69,7 +70,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
 
   #### Choose correlation structure ####
   switch(
-    net.method,
+    net.method[1],
     "corr" = {
       dat <- lapply(dat, function(x) array(apply(x, 3, cov2cor), dim(x)))
     },
@@ -96,10 +97,13 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
     }), dim(x)))
 
   # if threshold specified, transform edges using threshold function
-  if (!is.null(threshold)) {
+  # also check for predefined thresholds for ease of use
+  if (class(threshold) == "character") {
     if (threshold == "positive") {
-      threshold = function(x) {x[x < 0] = 0; x}
+      threshold <-  function(x) {x[x < 0] = 0; x}
     }
+  }
+  if (!is.null(threshold)) {
     dat_g <- lapply(dat, function(x)
       array(apply(x, 3, function(y) {
         thr <- threshold(y[lower.tri(y)])
@@ -146,7 +150,8 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       met_all$global <- global
 
       met_out <- met_regress(global, bat, net.cov, net_lab = "Global",
-                             kw.p = kw.p)
+                             labs = labs, kw.p = kw.p)
+      lm_all$global <- met_out$lm.met
       all_cov <- c(all_cov, list(met_out$out.p))
       all_site <- c(all_site, met_out$bat.p)
     },
@@ -157,7 +162,8 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       met_all$local.sum <- local_sum
 
       met_out <- met_regress(local_sum, bat, net.cov, net_lab = "Local",
-                             kw.p = kw.p)
+                             labs = labs, kw.p = kw.p)
+      lm_all$local <- met_out$lm.met
       all_cov <- c(all_cov, list(met_out$out.p))
       all_site <- c(all_site, met_out$bat.p)
     },
@@ -169,7 +175,8 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       met_all$within <- within
 
       met_out <- met_regress(within, bat, net.cov, net_lab = "Within",
-                             kw.p = kw.p)
+                             labs = labs, kw.p = kw.p)
+      lm_all$within <- met_out$lm.met
       all_cov <- c(all_cov, list(met_out$out.p))
       all_site <- c(all_site, met_out$bat.p)
     },
@@ -181,7 +188,8 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       met_all$between <- between
 
       met_out <- met_regress(between, bat, net.cov, net_lab = "Between",
-                             kw.p = kw.p)
+                             labs = labs, kw.p = kw.p)
+      lm_all$between <- met_out$lm.met
       all_cov <- c(all_cov, list(met_out$out.p))
       all_site <- c(all_site, met_out$bat.p)
     },
@@ -190,7 +198,8 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       met_all$clust.modularity <- cmodul
 
       met_out <- met_regress(cmodul, bat, net.cov, net_lab = "Cl.Modul",
-                             kw.p = kw.p)
+                             labs = labs, kw.p = kw.p)
+      lm_all$cmodul <- met_out$lm.met
       all_cov <- c(all_cov, list(met_out$out.p))
       all_site <- c(all_site, met_out$bat.p)
     },
@@ -200,20 +209,19 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       met_all$atlas.modularity <- amodul
 
       met_out <- met_regress(amodul, bat, net.cov, net_lab = "A.Modul",
-                             kw.p = kw.p)
+                             labs = labs, kw.p = kw.p)
+      lm_all$amodul <- met_out$lm.met
       all_cov <- c(all_cov, list(met_out$out.p))
       all_site <- c(all_site, met_out$bat.p)
     },
     "part.coeff" = {
-      if (is.null(threshold)) {
-        message("Participation coefficient does not apply to complete graphs")
-        }
       part <- lapply(gr, sapply, function(x)
         part_coeff(x, as.numeric(as.factor(roi.names)))[net.rois[1]])
       met_all$part.coeff <- part
 
       met_out <- met_regress(part, bat, net.cov, net_lab = "Part.Coeff",
-                             kw.p = kw.p)
+                             labs = labs, kw.p = kw.p)
+      lm_all$part.coeff <- met_out$lm.met
       all_cov <- c(all_cov, list(met_out$out.p))
       all_site <- c(all_site, met_out$bat.p)
     },
@@ -223,16 +231,18 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       met_all$gate.coeff <- gate
 
       met_out <- met_regress(gate, bat, net.cov, net_lab = "Gate.Coeff",
-                             kw.p = kw.p)
+                             labs = labs, kw.p = kw.p)
+      lm_all$gate.coeff <- met_out$lm.met
       all_cov <- c(all_cov, list(met_out$out.p))
       all_site <- c(all_site, met_out$bat.p)
     },
     "clust.coeff" = {
-      clustc <- lapply(gr, sapply, function(x) transitivity(x))
+      clustc <- lapply(gr, sapply, function(x) transitivity(x, "weighted"))
       met_all$clust.coeff <- clustc
 
       met_out <- met_regress(clustc, bat, net.cov, net_lab = "Clust.Coeff",
-                             kw.p = kw.p)
+                             labs = labs, kw.p = kw.p)
+      lm_all$clust.coeff <- met_out$lm.met
       all_cov <- c(all_cov, list(met_out$out.p))
       all_site <- c(all_site, met_out$bat.p)
     }
@@ -249,27 +259,31 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
          graphs = gr)
   } else {
     list(net.results = do.call(cbind, all_cov),
-         net.results.site = do.call(cbind, all_site))
+         net.results.site = net_res_site)
   }
 }
 
 # Helper function to regress network metric on input covariates
 met_regress <- function(metric, bat, net.cov = NULL, net_lab = NULL,
-                        kw.p = FALSE) {
+                        labs = NULL, kw.p = FALSE) {
   if (!is.null(net.cov)) {
     # Linear model for association with covariates
     lm_met <- lapply(metric, function(x) {
-      if (any(is.nan(x))) {message("WARNING: Regression on NaN values")}
-      lm(x ~ net.cov)
+      tryCatch(lm(x ~ net.cov), error = function(cond) {
+        message(cond)
+        message(paste(": Linear model could not be fit for", net_lab))
+        return(NULL)
+      })
     })
+    if (is.null(lm_met[[1]])) {return(list(out.p = NULL,
+                                           bat.p = NULL,
+                                           lm.met = NULL))}
     lm_met_bat <- lapply(metric, function(x) lm(x ~ net.cov+bat))
-    bat_p <- lapply(unique(names(dat)), function(x)
+    bat_p <- lapply(labs, function(x)
       anova(lm_met[[x]], lm_met_bat[[x]], test = "F")$`Pr(>F)`[2])
 
-    lm_all$global <- lm_met_bat
     out <- t(sapply(lm_met_bat, net_summary))
     dimnames(out) <- list(labs, paste(net_lab, c("est", "p"), sep = "."))
-    all_cov <- c(all_cov, list(out))
   }
 
   # KW test for association with site
@@ -281,7 +295,8 @@ met_regress <- function(metric, bat, net.cov = NULL, net_lab = NULL,
   names(out_site) <- paste(net_lab, "p", sep=".")
 
   list(out.p = out,
-       bat.p = out_site)
+       bat.p = out_site,
+       lm.met = lm_met_bat)
 }
 
 # Helper function to summarize network linear models

@@ -2,9 +2,7 @@
 % Please edit documentation in R/test_net.R
 \name{test_net}
 \alias{test_net}
-\title{Functional Connectivity Evaluations
-Many proposed by Meichen Yu. Refer to the 2018 paper for further details:
-\url{https://doi.org/10.1002/hbm.24241}}
+\title{Functional Connectivity Evaluations}
 \usage{
 test_net(
   ...,
@@ -13,7 +11,8 @@ test_net(
   net.cov = NULL,
   labs = c("Raw", "Out"),
   net.method = c("corr", "pcorr", "glasso"),
-  net.metrics = c("global", "local", "within", "modularity", "part.coeff"),
+  net.metrics = c("global", "local", "within", "between", "clust.modularity",
+    "atlas.modularity", "gateway.coeff", "part.coeff", "clust.coeff"),
   kw.p = FALSE,
   threshold = NULL,
   fisher = TRUE,
@@ -25,14 +24,13 @@ test_net(
 }
 \arguments{
 \item{threshold}{Function that takes adjacency matrix input and returns an
-adjacency matrix with thresholded values. Examples include `x > 0.5` for
-right-tail thresholding and `x[x <= 0.5] = 0; x` for right-tail thresholding
+adjacency matrix with thresholded values. Examples include \code{x > 0.5} for
+right-tail thresholding and \verb{x[x <= 0.5] = 0; x} for right-tail thresholding
 while keeping weights}
 
-\item{mod.clust}{Function from `igraph` that finds communities. See
+\item{mod.clust}{Function from \code{igraph} that finds communities. See
 \link[igraph]{membership} for options. Defaults to
-\link[igraph]{cluster_louvain}, which is used in the Brain Connectivity
-Toolbox}
+\link[igraph]{cluster_louvain}}
 
 \item{out.graphs}{}
 }
@@ -40,7 +38,6 @@ Toolbox}
 
 }
 \description{
-Functional Connectivity Evaluations
 Many proposed by Meichen Yu. Refer to the 2018 paper for further details:
 \url{https://doi.org/10.1002/hbm.24241}
 }
