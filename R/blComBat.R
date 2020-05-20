@@ -15,7 +15,7 @@
 blComBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
                      out.pd = FALSE, fisher = TRUE) {
   N <- dim(x)[3] # store number of obs
-  dnames <- dimnames(x)[[1]]
+  dnames <- dimnames(x)
   bat <- droplevels(bat)
 
   if (to.corr) {x[] <- array(apply(x, 3, cov2cor), dim(x))}
@@ -27,10 +27,15 @@ blComBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
   out <- gl_out
 
   subcom_out <- list()
-  for (d in unique(dnames)) {
-    subcom_out[[d]] <- fcComBat(out[dnames == d, dnames == d,], bat,
-                                mod = mod, to.corr = FALSE, fisher = fisher)
-    out[dnames == d, dnames == d,] <- subcom_out[[d]]$dat.out
+  blocks <- dnames[[1]]
+  for (b in blocks) {
+    block <- blocks == b
+    # if number of ROIs in subnetwork is greater than zero
+    if (sum(block) > 1) {
+      subcom_out[[b]] <- fcComBat(out[block, block,],
+                                  bat, mod = mod, to.corr = FALSE, fisher = fisher)
+      out[block, block,] <- subcom_out[[b]]$dat.out
+    }
   }
 
   if (out.pd) {out <- array(apply(out, 3, function(x)

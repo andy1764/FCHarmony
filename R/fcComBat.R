@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-fcComBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
+fcComBat = function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
                      out.pd = FALSE, fisher = TRUE) {
   N <- dim(x)[3] # store number of obs
   dnames <- dimnames(x)

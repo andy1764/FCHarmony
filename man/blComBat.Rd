@@ -4,7 +4,15 @@
 \alias{blComBat}
 \title{Experimental method for harmonization while accounting for subnetworks}
 \usage{
-blComBat(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE, out.pd = FALSE)
+blComBat(
+  x,
+  bat,
+  eb = TRUE,
+  mod = NULL,
+  to.corr = TRUE,
+  out.pd = FALSE,
+  fisher = TRUE
+)
 }
 \arguments{
 \item{out.pd}{}

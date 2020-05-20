@@ -22,6 +22,7 @@ test_communities <- function(..., labs = c("Raw", "Out"), bat, atlas,
                              grp.method = c("average", "multilayer"),
                              comm.method = cluster_louvain,
                              metric = c("adjusted.rand", "nmi"),
+                             threshold = "positive",
                              fisher = TRUE,
                              debug = FALSE) {
   if (is.null(bat)) {stop("Need to specify batch")}
@@ -38,15 +39,37 @@ test_communities <- function(..., labs = c("Raw", "Out"), bat, atlas,
   bat <- droplevels(bat)
   atlas <- as.numeric(as.factor(atlas)) # convert atlas to numeric
 
+  # if threshold specified, transform edges using threshold function
+  # also check for predefined thresholds for ease of use
+  if (class(threshold) == "character") {
+    if (threshold == "positive") {
+      threshold <- function(x) {ifelse(x>0, x, 0)}
+    }
+  }
+  if (!is.null(threshold)) {
+    dat_g <- lapply(dat, function(x)
+      array(apply(x, 3, function(y) {
+        thr <- threshold(y[lower.tri(y)])
+        out <- matrix(0, dim(x), dim(x))
+        out[lower.tri(out)] <- thr
+        out + t(out)
+      }), dim(x)))
+  } else {
+    dat_g <- dat
+  }
+
+  if (fisher) {
+    dat_g <- lapply(dat_g, function(x)
+      array(apply(x, 3, atanh), dim(x)))
+  }
+
   #### Obtain group-level FC matrices by site ####
   switch(
     grp.method[1],
     "average" = {
-      avg <- lapply(dat, function(x) {
+      avg <- lapply(dat_g, function(x) {
         lapply(setNames(levels(bat), levels(bat)), function(b) {
           out <- apply(x[,,which(bat==b)], c(1,2), mean)
-          out[out < 0] <- 0
-          if (fisher) {out <- atanh(out)}
           diag(out) <- 1
           out
         })

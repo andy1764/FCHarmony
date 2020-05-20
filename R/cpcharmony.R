@@ -17,8 +17,6 @@
 #' @param to.corr Logical vector. First element indicates whether input should
 #'   be forced to be a correlation matrix using  \link[stats]{cov2cor}, second
 #'   for output.
-#' @param cpc.cap.oc Logical, only used if \code{cpc.method = "CAP"}, if
-#' \code{TRUE} imposes orthogonal constraint when identifiying higher-order PCs.
 #' @param log.input Logical, whether to use the matrix logarithm of the input.
 #' @param err.eb Logical, use empirical Bayes in error harmonization.
 #' @param cpc.eb Logical, use empirical Bayes in CPC eigenvalue harmonization.
@@ -46,8 +44,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
                        method = c("ComBat", "log-ComBat", "none"),
                        log.input = FALSE,
                        force.PD = c(FALSE, FALSE), to.corr = c(FALSE, FALSE),
-                       cpc.cap.oc = FALSE, err.eb = TRUE,
-                       cpc.eb = TRUE, debug = FALSE) {
+                       err.eb = TRUE, cpc.eb = TRUE, debug = FALSE) {
   bat <- droplevels(bat)
   try(cpc.method <- match.arg(cpc.method))
   try(err.method <- match.arg(err.method))
@@ -200,7 +197,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
   # remove unnecessary arrays if not debug
   if (debug) {
     list(dat.out = dat_out,
-         dat.err.raw <- dat_err_raw,
+         dat.err.raw = dat_err_raw,
          dat.err = dat_err,
          dat.in = dat,
          cpcs = cpcs,

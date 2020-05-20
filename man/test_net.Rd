@@ -25,8 +25,7 @@ test_net(
 \arguments{
 \item{threshold}{Function that takes adjacency matrix input and returns an
 adjacency matrix with thresholded values. Examples include \code{x > 0.5} for
-right-tail thresholding and \verb{x[x <= 0.5] = 0; x} for right-tail thresholding
-while keeping weights}
+right-tail thresholding and \code{ifelse(x>0, x, 0)} for keeping positive weights}
 
 \item{mod.clust}{Function from \code{igraph} that finds communities. See
 \link[igraph]{membership} for options. Defaults to

@@ -24,16 +24,16 @@ fcCovBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
   if (fisher) {
     vec <- atanh(t(apply(x, 3, function(m) c(m[lower.tri(m)]))))
     cov_out <- covbat(t(vec), bat, mod = mod, eb = eb)
-    cov_out <- tanh(t(cov_out$dat.covbat))
+    cov_dat <- tanh(t(cov_out$dat.covbat))
   } else {
     vec <- t(apply(x, 3, function(m) c(m[lower.tri(m)])))
     cov_out <- covbat(t(vec), bat, mod = mod, eb = eb)
-    com_dat <- t(cov_out$dat.covbat)
+    cov_dat <- t(cov_out$dat.covbat)
   }
 
   out <- array(0, dim = dim(x))
   for (i in 1:N) {
-    out[,,i][lower.tri(out[,,i])] <- com_dat[i,]
+    out[,,i][lower.tri(out[,,i])] <- cov_dat[i,]
     out[,,i] <- out[,,i] + t(out[,,i])
     diag(out[,,i]) <- diag(x[,,i])
   }

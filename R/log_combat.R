@@ -20,7 +20,7 @@ log_combat <- function(x, # array of fc matrices, roi x roi x nsubj
                        bat, # vector of batch numbers
                        mod = NULL, # model matrix
                        eb = TRUE,
-                       input.pd = FALSE # force positive semi-definiteness in input array
+                       input.pd = FALSE# force positive semi-definiteness in input array
 ) {
   N <- dim(x)[3]
   dnames <- dimnames(x)

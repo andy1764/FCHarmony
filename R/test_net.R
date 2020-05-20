@@ -7,8 +7,7 @@
 #' @param bat
 #' @param threshold Function that takes adjacency matrix input and returns an
 #' adjacency matrix with thresholded values. Examples include `x > 0.5` for
-#' right-tail thresholding and `x[x <= 0.5] = 0; x` for right-tail thresholding
-#' while keeping weights
+#' right-tail thresholding and `ifelse(x>0, x, 0)` for keeping positive weights
 #' @param mod.clust Function from `igraph` that finds communities. See
 #' \link[igraph]{membership} for options. Defaults to
 #' \link[igraph]{cluster_louvain}
@@ -24,7 +23,7 @@
 #'
 #' @return
 #' @import igraph doParallel glassoFast
-#' @importFrom brainGraph efficiency part_coeff gateway_coeff
+#' @importFrom brainGraph efficiency
 #' @importFrom NetworkToolbox clustcoeff gateway participation
 #' @importFrom stats kruskal.test p.adjust prcomp lm
 #' @importFrom Matrix rowSums
@@ -101,7 +100,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
   # also check for predefined thresholds for ease of use
   if (class(threshold) == "character") {
     if (threshold == "positive") {
-      threshold <-  function(x) {x[x < 0] = 0; x}
+      threshold <- function(x) {ifelse(x<0, x, 0)}
     }
   }
   if (!is.null(threshold)) {
