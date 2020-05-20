@@ -1,7 +1,7 @@
 # Method first implemented by Yu et al. (2018), DOI: 10.1002/hbm.24241
 # Apply ComBat to Fisher-transformed lower triangular elements
 
-#' Functional connectivity ComBat
+#' Functional connectivity CovBat
 #'
 #' @param x
 #' @param bat
@@ -13,9 +13,9 @@
 #' @export
 #'
 #' @examples
-fcComBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
+fcCovBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
                      out.pd = FALSE, fisher = TRUE) {
-  N <- dim(x)[3] # store number of obs
+  N <- dim(x)[3]
   dnames <- dimnames(x)
   bat <- droplevels(bat)
 
@@ -23,12 +23,12 @@ fcComBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
 
   if (fisher) {
     vec <- atanh(t(apply(x, 3, function(m) c(m[lower.tri(m)]))))
-    com_out <- combat(t(vec), bat, mod = mod, eb = eb)
-    com_dat <- tanh(t(com_out$dat.combat))
+    cov_out <- covbat(t(vec), bat, mod = mod, eb = eb)
+    cov_out <- tanh(t(cov_out$dat.covbat))
   } else {
     vec <- t(apply(x, 3, function(m) c(m[lower.tri(m)])))
-    com_out <- combat(t(vec), bat, mod = mod, eb = eb)
-    com_dat <- t(com_out$dat.combat)
+    cov_out <- covbat(t(vec), bat, mod = mod, eb = eb)
+    com_dat <- t(cov_out$dat.covbat)
   }
 
   out <- array(0, dim = dim(x))
@@ -43,5 +43,5 @@ fcComBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
 
   dimnames(out) <- dnames
 
-  list(dat.out = out, combat.out = com_out)
+  list(dat.out = out, covbat.out = cov_out)
 }

@@ -23,7 +23,9 @@ pc_combat <- function(x, # array of fc matrices, roi x roi x nsubj
                       score.eb = FALSE, # empirical Bayes for scores
                       pc.sym = TRUE # perform PCA only on lower triangular
 ) {
-  n <- dim(x)[3] # store number of obs
+  N <- dim(x)[3]
+  dnames <- dimnames(x)
+  bat <- droplevels(bat)
 
   # collapse into vectors
   if (pc.sym) {
@@ -48,7 +50,7 @@ pc_combat <- function(x, # array of fc matrices, roi x roi x nsubj
   full_scores[,1:npc] <- t(scores_com$dat.combat)
   est_covbat <- t(t(full_scores %*% t(v_pc$rotation)) + v_pc$center) # get vectorized CovBat corrected
 
-  out_covbat <- array(0, dim = dim(x))
+  out <- array(0, dim = dim(x))
   est_mat <- array(0, dim = dim(x))
   for (i in 1:n) {
     if (pc.sym) {
@@ -59,9 +61,11 @@ pc_combat <- function(x, # array of fc matrices, roi x roi x nsubj
       est_mat[,,i] <- matrix(est_covbat[i,], dim(x[,,1]))
     }
   }
-  out_covbat <- est_mat
+  out <- est_mat
 
-  list(dat.out=out_covbat,
+  dimnames(out) <- dnames
+
+  list(dat.out=out,
        dat.pc = v_pc,
        combat.out = scores_com,
        npc=npc)

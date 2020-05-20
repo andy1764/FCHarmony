@@ -25,7 +25,7 @@
 #' @return
 #' @import igraph doParallel glassoFast
 #' @importFrom brainGraph efficiency part_coeff gateway_coeff
-#' @importFrom NetworkToolbox clustcoeff
+#' @importFrom NetworkToolbox clustcoeff gateway participation
 #' @importFrom stats kruskal.test p.adjust prcomp lm
 #' @importFrom Matrix rowSums
 #' @export
@@ -54,6 +54,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
   names(dat) <- labs
 
   roi.names <- dimnames(dat[[1]])[[1]] # assumes same ROI labels throughout
+  rois <- as.numeric(as.factor(roi.names))
 
   all_vec <- lapply(dat, function(x)
     t(apply(x, 3, function(y) c(y[lower.tri(y)]))))
@@ -215,8 +216,11 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       all_site <- c(all_site, met_out$bat.p)
     },
     "part.coeff" = {
-      part <- lapply(gr, sapply, function(x)
-        part_coeff(x, as.numeric(as.factor(roi.names)))[net.rois[1]])
+      # # old using brainGraph
+      # part <- lapply(gr, sapply, function(x)
+      #   part_coeff(x, as.numeric(as.factor(roi.names)))[net.rois[1]])
+      part <- lapply(dat_g, apply, 3, function(x)
+        mean(participation(x, comm = rois)$positive[net.rois]))
       met_all$part.coeff <- part
 
       met_out <- met_regress(part, bat, net.cov, net_lab = "Part.Coeff",
@@ -226,8 +230,11 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       all_site <- c(all_site, met_out$bat.p)
     },
     "gateway.coeff" = {
-      gate <- lapply(gr, sapply, function(x)
-        gateway_coeff(x, as.numeric(as.factor(roi.names)))[net.rois[1]])
+      # # old using brainGraph
+      # gate <- lapply(gr, sapply, function(x)
+      #   gateway_coeff(x, as.numeric(as.factor(roi.names)))[net.rois[1]])
+      gate <- lapply(dat_g, apply, 3, function(x)
+        mean(gateway(x, comm = rois)$positive[net.rois]))
       met_all$gate.coeff <- gate
 
       met_out <- met_regress(gate, bat, net.cov, net_lab = "Gate.Coeff",
@@ -237,7 +244,10 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       all_site <- c(all_site, met_out$bat.p)
     },
     "clust.coeff" = {
-      clustc <- lapply(gr, sapply, function(x) transitivity(x, "weighted"))
+      # clustc <- lapply(dat_g, apply, 3, function(x)
+      #   clustcoeff(x, weighted)$CC)
+      clustc <- lapply(gr, sapply, function(x)
+        mean(igraph::transitivity(x, "weighted")))
       met_all$clust.coeff <- clustc
 
       met_out <- met_regress(clustc, bat, net.cov, net_lab = "Clust.Coeff",
@@ -256,7 +266,8 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
          net.results.site = net_res_site,
          metrics = met_all,
          lm.res = lm_all,
-         graphs = gr)
+         graphs = gr,
+         graph.dat = dat_g)
   } else {
     list(net.results = do.call(cbind, all_cov),
          net.results.site = net_res_site)

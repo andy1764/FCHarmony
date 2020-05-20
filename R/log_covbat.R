@@ -26,7 +26,10 @@ log_covbat <- function(x, # array of fc matrices, roi x roi x nsubj
                        pc.sym = TRUE, # perform PCA only on lower triangular
                        input.pd = FALSE # force positive semi-definiteness in input array
 ) {
-  n <- dim(x)[3] # store number of obs
+  N <- dim(x)[3]
+  dnames <- dimnames(x)
+  bat <- droplevels(bat)
+
   if (input.pd) {
     x <- array(apply(dat, 3, function(x) {as.numeric(nearPD(x)$mat)}), dim(dat))
   }
@@ -44,7 +47,7 @@ log_covbat <- function(x, # array of fc matrices, roi x roi x nsubj
                        percent.var = covbat.var)
   est_covbat <- t(scores_com$dat.covbat)
 
-  out_covbat <- array(0, dim = dim(x))
+  out <- array(0, dim = dim(x))
   est_mat <- array(0, dim = dim(x))
   for (i in 1:n) {
     if (pc.sym) {
@@ -54,9 +57,11 @@ log_covbat <- function(x, # array of fc matrices, roi x roi x nsubj
     } else {
       est_mat[,,i] <- matrix(est_covbat[i,], dim(x[,,1]))
     }
-    out_covbat[,,i] <- expm(est_mat[,,i], "R_Eigen")
+    out[,,i] <- expm(est_mat[,,i], "R_Eigen")
   }
 
-  list(dat.out=out_covbat,
+  dimnames(out) <- dnames
+
+  list(dat.out=out,
        covbat.out = scores_com)
 }
