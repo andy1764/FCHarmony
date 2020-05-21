@@ -35,13 +35,9 @@ output.}
 be forced to be a correlation matrix using  \link[stats]{cov2cor}, second
 for output.}
 
+\item{eb}{Logical, use empirical Bayes in harmonization.}
+
 \item{debug}{Logical, include internal objects in output.}
-
-\item{log.input}{Logical, whether to use the matrix logarithm of the input.}
-
-\item{err.eb}{Logical, use empirical Bayes in error harmonization.}
-
-\item{cpc.eb}{Logical, use empirical Bayes in CPC eigenvalue harmonization.}
 }
 \value{
 \code{cpcharmony} returns a list containing the following components:

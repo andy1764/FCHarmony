@@ -13,6 +13,7 @@ test_communities(
   grp.method = c("average", "multilayer"),
   comm.method = cluster_louvain,
   metric = c("adjusted.rand", "nmi"),
+  threshold = "positive",
   fisher = TRUE,
   debug = FALSE
 )
