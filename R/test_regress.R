@@ -15,11 +15,9 @@
 test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
                       labs = c("Raw", "Out"),
                       tests = c("Elem", "Group", "CPC"),
-                      incl.bat = TRUE, # include batch in the model
                       cpc.k = 15,
                       fisher = TRUE,
                       seed.roi = NULL, to.corr = FALSE, debug = FALSE) {
-  if (is.null(bat)) {stop("Need to specify batch")}
   dat <- list(...)
   L <- length(dat)
 
@@ -34,12 +32,12 @@ test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
     dat <- lapply(dat, function(x) array(apply(x, 3, cov2cor), dim(x)))
   }
 
-  bat <- droplevels(bat)
-  if (incl.bat) {
-    mod_bat <- cbind(mod, model.matrix(~bat)[,-1])
-    mods <- colnames(mod_bat)[-1]
+  if (is.null(bat)) {
+    design <- mod
+    mods <- colnames(design)[-1]
   } else {
-    mods <- colnames(mod)[-1]
+    design <- cbind(mod, model.matrix(~bat)[,-1])
+    mods <- colnames(design)[-1]
   }
 
   # if no ROI names specified, take from first dataset
@@ -73,9 +71,9 @@ test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
         apply(x, 2, function(y) lm(y ~ mod))
       })
 
-      if (incl.bat) {
+      if (!is.null(bat)) {
         elem_reg_bat <- lapply(vec, function(x) {
-          apply(x, 2, function(y) lm(y ~ mod_bat))
+          apply(x, 2, function(y) lm(y ~ design))
         })
         bat_p <- lapply(unique(names(dat)), function(x)
           sapply(1:length(elem_reg[[x]]), function(y)
@@ -119,9 +117,9 @@ test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
         apply(x, 2, function(y) lm(y ~ mod))
       })
 
-      if (incl.bat) {
+      if (!is.null(bat)) {
         grp_reg_bat <- lapply(vec, function(x) {
-          apply(x, 2, function(y) lm(y ~ mod_bat))
+          apply(x, 2, function(y) lm(y ~ design))
         })
         bat_p <- lapply(unique(names(dat)), function(x)
           sapply(1:length(grp_reg[[x]]), function(y)
@@ -152,10 +150,10 @@ test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
           glm(x$D[y,] ~ mod, family = gaussian(link = "log"))
         })
       })
-      if (incl.bat) {
+      if (!is.null(bat)) {
         cpc_reg_bat <- lapply(all_cpc, function(x) {
           lapply(1:dim(x$D)[1], function(y) {
-            glm(x$D[y,] ~ mod_bat, family = gaussian(link = "log"))
+            glm(x$D[y,] ~ design, family = gaussian(link = "log"))
           })
         })
         bat_p <- lapply(unique(names(dat)), function(x)

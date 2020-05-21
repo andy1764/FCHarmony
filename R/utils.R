@@ -1,4 +1,7 @@
-# simple function to convert lower triangular entries to symmetric matrix
+#' Convert lower triangular entries to symmetric matrix
+#' @param vec Lower triangular elements, typically derived from
+#'   \link[base]{lower.tri} with `diag = FALSE`.
+#' @noRd
 vec2corr <- function(vec, names = NULL, corr = TRUE) {
   d <- (1 + sqrt(8*length(vec)+1))/2 # dim of output
   out <- matrix(0, d, d, dimnames = names)
@@ -8,7 +11,10 @@ vec2corr <- function(vec, names = NULL, corr = TRUE) {
   out
 }
 
-# simple function to convert lower triangular (incl diag) to symmetric matrix
+#' Convert lower triangular incl. diagonals to symmetric matrix
+#' @param vec Lower triangular elements, typically derived from
+#'   \link[base]{lower.tri} with `diag = TRUE`.
+#' @noRd
 dvec2corr <- function(vec, names = NULL) {
   d <- (sqrt(8*length(vec)+1)-1)/2 # dim of output
   out <- matrix(0, d, d, dimnames = names)
@@ -18,7 +24,11 @@ dvec2corr <- function(vec, names = NULL) {
   out
 }
 
-# convert covariance to Laplacian with a given threshold,
+#' Convert covariance to Laplacian with a given threshold
+#' @param cov Covariance matrix.
+#' @param threshold Correlation threshold for edge
+#' @param gamma Added value to ensure positive definite Laplacians
+#' @noRd
 cov2lap <- function(cov, threshold = 0.5, gamma = 0.01) {
   corr <- cov2cor(as.matrix(nearPD(cov)$mat))
   corr[upper.tri(corr)] <- as.numeric(corr[upper.tri(corr)] >= threshold)
@@ -30,7 +40,11 @@ cov2lap <- function(cov, threshold = 0.5, gamma = 0.01) {
   return(corr)
 }
 
-# convert correlation matrix to connectivity values grouped by ROI
+#' Convert correlation matrix to within- and between- connectivities
+#' @param x Correlation matrix.
+#' @param dims Labels to group over.
+#' @param fisher z-transform elements of x prior to grouping
+#' @noRd
 corr2con <- function(corr, dims = dimnames(corr), fisher = TRUE) {
   if (fisher) {corr[] <- atanh(corr)}
   diag(corr) <- 0 # ignore diagonal to get avg connectivities
@@ -50,53 +64,30 @@ corr2con <- function(corr, dims = dimnames(corr), fisher = TRUE) {
   out
 }
 
-# convert correlation matrix to partial correlation matrix
+#' Convert correlation matrix to partial correlation matrix
+#' @param cor Correlation matrix.
+#' @noRd
 corr2pcor <- function(cor) {
   inv <- -solve(cor)
   diag(inv) <- -diag(inv)
   cov2cor(inv)
 }
 
-# get matrix logarithm of SPD matrix
+#' Get matrix log of SPD matrix
+#' @param x Symmetric positive definite matrix.
+#' @noRd
 logm_eig <- function(x) {
   eig <- eigen(x, symmetric = TRUE)
   if (any(eig$values <= 0)) {stop("Input is not positive definite")}
   eig$vectors %*% diag(log(eig$values)) %*% t(eig$vectors)
 }
 
-# # get matrix exponential of diagonalizable matrix
-# expm_eig <- function(x) {
-#   eig <- eigen(x, symmetric = TRUE)
-#   eig$vectors %*% diag(exp(eig$values)) %*% t(eig$vectors)
-# }
-
-# logm_eig <- function(x) {
-#   n <- dim(x)[1]
-#   eig <- eigen(x, symmetric = TRUE)
-#   if (any(eig$values <= 0)) {stop("Input is not positive definite")}
-#   leig <- log(eig$values)
-#   out <- matrix(0, n, n)
-#   for (i in 1:n) {
-#     out <- out + leig[i] * tcrossprod(eig$vectors[,i])
-#   }
-#   out
-# }
-
-# experimental: GPU-based matrix log
-# logm_eig_gpu <- function(x) {
-#   n <- dim(x)[1]
-#   y <- vclMatrix(x, type = "double")
-#   eig <- eigen(y, symmetric = TRUE)
-#   # if (any(eig$values <= 0)) {stop("Input is not positive definite")}
-#   leig <- log(eig$values)
-#   leig_mat <- identity_matrix(n, "double")
-#   diag(leig_mat) <- leig
-#   out <- eig$vectors %*% leig_mat %*% t(eig$vectors)
-#   as.matrix(out)
-# }
-
-# get local efficiency, based on code from brainGraph but fixed
-# extra option to specify nodes to calculate for
+#' Local efficiency, fixed version of \link[brainGraph]{local_eff}
+#'
+#' Additional option to specify nodes over which to calculate.
+#' @param g \link[igraph]{igraph} object.
+#' @param ind Numeric, node indicies to calculate local efficiency for.
+#' @noRd
 local_eff <- function (g, ind, weights = NULL, use.parallel = TRUE) {
   if (is.null(weights)) {
     A <- as_adj(g, names = FALSE)
