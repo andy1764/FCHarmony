@@ -12,7 +12,6 @@
 #' @export
 #'
 #' @examples
-
 cpc_Flury <- function(dat, iter = 15) {
   N <- dim(dat)[3]
   P <- dim(dat)[2]

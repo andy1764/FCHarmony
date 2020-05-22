@@ -31,7 +31,6 @@
 #' @importFrom cpca cpc
 #' @importFrom Matrix nearPD
 #' @importFrom stats cov2cor
-#' @importFrom expm expm
 #' @export
 #'
 #' @examples
@@ -183,7 +182,7 @@ cpcharmony <- function(dat, bat, mod = NULL,
   dimnames(dat_out) <- dnames
 
   if (log.input) {
-    dat_out <- array(apply(dat_out, 3, expm, "R_Eigen"), dim(dat_out))
+    dat_out <- array(apply(dat_out, 3, expm_eig), dim(dat_out))
   }
   if (force.PD[2]) {
     dat_out <- array(apply(dat_out, 3, function(x) {

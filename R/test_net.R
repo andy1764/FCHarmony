@@ -1,4 +1,4 @@
-#' Functional Connectivity Evaluations
+#' Functional Connectivity Network Metric Evaluations
 #'
 #' Many proposed by Meichen Yu. Refer to the 2018 paper for further details:
 #' \url{https://doi.org/10.1002/hbm.24241}

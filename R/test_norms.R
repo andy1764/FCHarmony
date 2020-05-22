@@ -9,7 +9,6 @@
 #' @param bat
 #'
 #' @return
-#' @importFrom expm expm
 #' @importFrom CovTools CovDist
 #' @importFrom MDMR mdmr
 #' @importFrom stats dist

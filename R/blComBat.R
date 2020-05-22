@@ -5,6 +5,8 @@
 #' @param x
 #' @param bat
 #' @param mod
+#' @param blocks Blocks indicating submatrices that are harmonized in the
+#'   second-stage ComBat. Defaults to input dimension names.
 #' @param to.corr
 #' @param out.pd
 #'
@@ -12,7 +14,8 @@
 #' @export
 #'
 #' @examples
-blComBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
+blComBat =  function(x, bat, mod = NULL, blocks = dimnames(x)[[1]], eb = TRUE,
+                     to.corr = TRUE,
                      out.pd = FALSE, fisher = TRUE) {
   N <- dim(x)[3] # store number of obs
   dnames <- dimnames(x)
@@ -27,7 +30,6 @@ blComBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
   out <- gl_out
 
   subcom_out <- list()
-  blocks <- dnames[[1]]
   for (b in blocks) {
     block <- blocks == b
     # if number of ROIs in subnetwork is greater than zero

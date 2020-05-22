@@ -10,6 +10,7 @@
 #' @param out.pd
 #'
 #' @return
+#' @import CovBat
 #' @export
 #'
 #' @examples

@@ -2,13 +2,12 @@
 % Please edit documentation in R/test_communities.R
 \name{test_communities}
 \alias{test_communities}
-\title{Community detection tests
-Examine if site effects exist in community detection}
+\title{Community detection tests}
 \usage{
 test_communities(
   ...,
   labs = c("Raw", "Out"),
-  bat,
+  grp,
   atlas,
   grp.method = c("average", "multilayer"),
   comm.method = cluster_louvain,
@@ -19,6 +18,8 @@ test_communities(
 )
 }
 \arguments{
+\item{grp}{Factor specifying groups over which to aggregate.}
+
 \item{atlas}{Vector of labels specifying original subnetworks.}
 
 \item{grp.method}{Method for obtaining group-level functional connectivity.}
@@ -37,6 +38,5 @@ test_communities(
 
 }
 \description{
-Community detection tests
-Examine if site effects exist in community detection
+Examine if grouping affects community detection.
 }

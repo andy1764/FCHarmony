@@ -12,7 +12,6 @@
 #' @return
 #'
 #' @import CovBat
-#' @importFrom expm expm
 #' @export
 #'
 #' @examples
@@ -57,7 +56,7 @@ log_covbat <- function(x, # array of fc matrices, roi x roi x nsubj
     } else {
       est_mat[,,i] <- matrix(est_covbat[i,], dim(x[,,1]))
     }
-    out[,,i] <- expm(est_mat[,,i], "R_Eigen")
+    out[,,i] <- expm_eig(est_mat[,,i])
   }
 
   dimnames(out) <- dnames

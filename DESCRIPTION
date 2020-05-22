@@ -7,7 +7,10 @@ Authors@R:
            role = c("aut", "cre"),
            email = "andrewac@pennmedicine.upenn.edu",
            comment = c(ORCID = "0000-0002-5027-6422"))
-Description: Methods for harmonization of functional connectivity measures, currently WIP
+Description: Methods and evaluations for harmonization of functional 
+    connectivity matrices. Includes existing and novel methodologies as well as
+    the option to evaluate the impact of harmonization on a wide variety of 
+    network metrics.
 License: Artistic License 2.0
 Encoding: UTF-8
 LazyData: true
@@ -16,15 +19,15 @@ RoxygenNote: 7.1.0
 Imports: 
     CovBat,
     brainGraph,
+    NetworkToolbox,
     cpca,
-    expm,
     CovTools,
     igraph,
     doParallel,
+    reshape2,
+    ggplot2,
     Matrix,
     stats,
     utils
-Remotes:
-    tpepler/cpc
 Suggests: 
     testthat (>= 2.1.0)

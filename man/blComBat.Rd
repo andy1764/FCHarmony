@@ -7,14 +7,18 @@
 blComBat(
   x,
   bat,
-  eb = TRUE,
   mod = NULL,
+  blocks = dimnames(x)[[1]],
+  eb = TRUE,
   to.corr = TRUE,
   out.pd = FALSE,
   fisher = TRUE
 )
 }
 \arguments{
+\item{blocks}{Blocks indicating submatrices that are harmonized in the
+second-stage ComBat. Defaults to input dimension names.}
+
 \item{out.pd}{}
 }
 \value{

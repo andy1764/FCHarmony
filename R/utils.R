@@ -74,12 +74,22 @@ corr2pcor <- function(cor) {
 }
 
 #' Get matrix log of SPD matrix
+#'
+#' Made to be faster than \link[expm]{logm}.
 #' @param x Symmetric positive definite matrix.
 #' @noRd
 logm_eig <- function(x) {
   eig <- eigen(x, symmetric = TRUE)
   if (any(eig$values <= 0)) {stop("Input is not positive definite")}
   eig$vectors %*% diag(log(eig$values)) %*% t(eig$vectors)
+}
+
+#' Get matrix exponential of symmetric matrix
+#' @param x Symmetric positive definite matrix.
+#' @noRd
+expm_eig <- function(x) {
+  eig <- eigen(x, symmetric = TRUE)
+  eig$vectors %*% diag(exp(eig$values)) %*% t(eig$vectors)
 }
 
 #' Local efficiency, fixed version of \link[brainGraph]{local_eff}

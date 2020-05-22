@@ -1,14 +1,15 @@
 #' Community detection tests
-#' Examine if site effects exist in community detection
+#'
+#' Examine if grouping affects community detection.
 #'
 #' @param ...
-#' @param bat
 #' @param labs
+#' @param grp Factor specifying groups over which to aggregate.
 #' @param atlas Vector of labels specifying original subnetworks.
 #' @param grp.method Method for obtaining group-level functional connectivity.
 #' @param comm.method Function from `igraph` that finds communities. See
-#' \link[igraph]{membership} for options. Defaults to
-#' \link[igraph]{cluster_louvain}
+#'   \link[igraph]{membership} for options. Defaults to
+#'   \link[igraph]{cluster_louvain}
 #' @param comp.method Metric for comparing community detections.
 #' @param fisher Whether to z-transform input FC matrices
 #' @param debug
@@ -18,14 +19,14 @@
 #' @export
 #'
 #' @examples
-test_communities <- function(..., labs = c("Raw", "Out"), bat, atlas,
+test_communities <- function(..., labs = c("Raw", "Out"), grp, atlas,
                              grp.method = c("average", "multilayer"),
                              comm.method = cluster_louvain,
                              metric = c("adjusted.rand", "nmi"),
                              threshold = "positive",
                              fisher = TRUE,
                              debug = FALSE) {
-  if (is.null(bat)) {stop("Need to specify batch")}
+  if (is.null(grp)) {stop("Need to specify group")}
   dat <- list(...)
   L <- length(dat)
 
@@ -36,7 +37,7 @@ test_communities <- function(..., labs = c("Raw", "Out"), bat, atlas,
   labs <- labs[1:L]
   names(dat) <- labs
 
-  bat <- droplevels(bat)
+  grp <- droplevels(grp)
   atlas <- as.numeric(as.factor(atlas)) # convert atlas to numeric
 
   # if threshold specified, transform edges using threshold function
@@ -68,8 +69,8 @@ test_communities <- function(..., labs = c("Raw", "Out"), bat, atlas,
     grp.method[1],
     "average" = {
       avg <- lapply(dat_g, function(x) {
-        lapply(setNames(levels(bat), levels(bat)), function(b) {
-          out <- apply(x[,,which(bat==b)], c(1,2), mean)
+        lapply(setNames(levels(grp), levels(grp)), function(b) {
+          out <- apply(x[,,which(grp==b)], c(1,2), mean)
           diag(out) <- 1
           out
         })
@@ -86,13 +87,13 @@ test_communities <- function(..., labs = c("Raw", "Out"), bat, atlas,
   atl_comp <- lapply(clust, function(x) {
     setNames(
       sapply(1:length(x), function(i) igraph::compare(x[[i]], atlas, metric)),
-      levels(bat))
+      levels(grp))
   })
 
   # compare alignment with eachother
-  site_comp <- lapply(clust, function(x) {
+  grp_comp <- lapply(clust, function(x) {
     comp <- matrix(0, length(x), length(x),
-                   dimnames = list(levels(bat), levels(bat)))
+                   dimnames = list(levels(grp), levels(grp)))
     for (i in 1:length(x)) {
       for (j in 1:length(x)) {
         if (i == j) {
@@ -109,7 +110,7 @@ test_communities <- function(..., labs = c("Raw", "Out"), bat, atlas,
     structure(
       list(communities = clust,
            atlas.comp = atl_comp,
-           bat.comp = site_comp,
+           grp.comp = grp_comp,
            graphs = gr,
            atlas = atlas),
       class = "commTest")
@@ -117,7 +118,7 @@ test_communities <- function(..., labs = c("Raw", "Out"), bat, atlas,
     structure(
       list(communities = clust,
            atlas.comp = atl_comp,
-           bat.comp = site_comp),
+           grp.comp = grp_comp),
       class = "commTest")
   }
 }

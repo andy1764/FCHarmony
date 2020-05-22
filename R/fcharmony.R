@@ -24,7 +24,6 @@
 #' @importFrom cpca cpc
 #' @importFrom Matrix nearPD
 #' @importFrom stats cov2cor
-#' @importFrom expm expm
 #' @export
 #'
 #' @examples
