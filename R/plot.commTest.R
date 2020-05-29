@@ -14,6 +14,9 @@
 #'   not all labels match, 3 is the number of unique labels (minimize), 4 is
 #'   a weighted sum between 1 and 2, giving more weight to having all same. 5 is
 #'   a weighted sum between 1 and 3, penalizing more distinct labels.
+#' @param manual.labs Optional vector of length equal to the number of
+#'   communities. Recodes community numbers. For example, `c(3,2,1)` swaps the
+#'   labels of communities 1 and 3.
 #'
 #' @return
 #' @import ggplot2
@@ -27,7 +30,8 @@ plot.commTest <- function(x,
                           atlas = NULL,
                           atlas.lab = NULL,
                           match.labs = FALSE,
-                          overlap.obj = 1) {
+                          overlap.obj = 1,
+                          manual.labs = NULL) {
   dat <- x$communities[[which]]
   bats = names(x$communities$Raw)
 
@@ -92,6 +96,9 @@ plot.commTest <- function(x,
     all_comms[[i+1]] <- comms_new # store even if not kept
   }
   comms <- all_comms[[which.max(overlap)]]
+
+  if(!is.null(manual.labs)) {comms[] <- sapply(comms,
+                                               function(x) c(manual.labs)[x])}
 
   if (!is.null(atlas)) {
     comms <- cbind(atlas, comms)

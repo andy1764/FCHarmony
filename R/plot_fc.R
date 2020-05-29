@@ -89,6 +89,7 @@ plot_fc <- function(cov, lims = c(-max(abs(cov)), max(abs(cov))),
   } else {
     sub <- subgraphs
     dat <- dat[order(sub), order(sub)]
+    sub <- dimnames(dat)[[1]]
     xmin <- sapply(unique(sub), function(x) min(which(sub == x)))-.5
     xmax <- sapply(unique(sub), function(x) max(which(sub == x)))+.5
     Subgraph <- unique(sub)
