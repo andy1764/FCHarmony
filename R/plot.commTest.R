@@ -109,10 +109,12 @@ plot.commTest <- function(x,
   comms_m <- melt(comms)
   ncolors <- length(unique(c(comms)))
   ggplot(data = comms_m) + geom_tile(aes(x = Var2, y = Var1, fill = as.factor(value))) +
-    scale_fill_manual(values = colorRampPalette(
-      brewer.pal(8, "Set1"))(ncolors)) +
-    labs(x = "", y = "ROI", fill = "Community") +
     guides(fill=guide_legend(ncol=1)) +
+    labs(x = "", y = "ROI", fill = "Community") +
+    scale_fill_manual(values = colorRampPalette(
+      brewer.pal(8, "Set1"))(ncolors),
+      breaks = sort(unique(atlas))) +
+    scale_y_reverse() +
     theme_classic() +
     theme(axis.line.x = element_blank(),
           axis.line.y = element_blank(),

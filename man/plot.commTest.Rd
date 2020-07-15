@@ -10,7 +10,8 @@
   atlas = NULL,
   atlas.lab = NULL,
   match.labs = FALSE,
-  overlap.obj = 1
+  overlap.obj = 1,
+  manual.labs = NULL
 )
 }
 \arguments{
@@ -24,6 +25,10 @@ are sum over all ROIs. 1 is number of overlapping labels, 2 is whether or
 not all labels match, 3 is the number of unique labels (minimize), 4 is
 a weighted sum between 1 and 2, giving more weight to having all same. 5 is
 a weighted sum between 1 and 3, penalizing more distinct labels.}
+
+\item{manual.labs}{Optional vector of length equal to the number of
+communities. Recodes community numbers. For example, \code{c(3,2,1)} swaps the
+labels of communities 1 and 3.}
 }
 \value{
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_net.R
 \name{test_net}
 \alias{test_net}
-\title{Functional Connectivity Evaluations}
+\title{Functional Connectivity Network Metric Evaluations}
 \usage{
 test_net(
   ...,
@@ -13,6 +13,7 @@ test_net(
   net.method = c("corr", "pcorr", "glasso"),
   net.metrics = c("global", "local", "within", "between", "clust.modularity",
     "atlas.modularity", "gateway.coeff", "part.coeff", "clust.coeff"),
+  add.metrics = NULL,
   kw.p = FALSE,
   threshold = NULL,
   fisher = TRUE,
@@ -23,6 +24,11 @@ test_net(
 )
 }
 \arguments{
+\item{add.metrics}{Additional metrics as named list indicating metric label.
+Each list in \code{add.metrics} should be a list of length \code{n} vectors, each
+corresponding to an input data frame, with the same names as given in
+\code{labs}}
+
 \item{threshold}{Function that takes adjacency matrix input and returns an
 adjacency matrix with thresholded values. Examples include \code{x > 0.5} for
 right-tail thresholding and \code{ifelse(x>0, x, 0)} for keeping positive weights}
@@ -37,6 +43,6 @@ right-tail thresholding and \code{ifelse(x>0, x, 0)} for keeping positive weight
 
 }
 \description{
-Many proposed by Meichen Yu. Refer to the 2018 paper for further details:
+Some proposed by Meichen Yu. Refer to the 2018 paper for further details:
 \url{https://doi.org/10.1002/hbm.24241}
 }

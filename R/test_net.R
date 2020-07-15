@@ -1,6 +1,6 @@
 #' Functional Connectivity Network Metric Evaluations
 #'
-#' Many proposed by Meichen Yu. Refer to the 2018 paper for further details:
+#' Some proposed by Meichen Yu. Refer to the 2018 paper for further details:
 #' \url{https://doi.org/10.1002/hbm.24241}
 #'
 #' @param ...
@@ -17,6 +17,10 @@
 #' @param labs
 #' @param net.method
 #' @param net.metrics
+#' @param add.metrics Additional metrics as named list indicating metric label.
+#'   Each list in `add.metrics` should be a list of length `n` vectors, each
+#'   corresponding to an input data frame, with the same names as given in
+#'   `labs`
 #' @param weighted
 #' @param glasso.rho
 #' @param out.graphs
@@ -37,6 +41,7 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
                                      "clust.modularity", "atlas.modularity",
                                      "gateway.coeff", "part.coeff",
                                      "clust.coeff"),
+                     add.metrics = NULL,
                      kw.p = FALSE,
                      threshold = NULL, fisher = TRUE,
                      mod.clust = cluster_louvain,
@@ -254,8 +259,30 @@ test_net <- function(..., bat = NULL, net.rois = NULL,
       lm_all$clust.coeff <- met_out$lm.met
       all_cov <- c(all_cov, list(met_out$out.p))
       all_site <- c(all_site, met_out$bat.p)
+    },
+    "weight.clust.coeff" = {
+      # using tnet package clustering_w
+      # https://toreopsahl.com/2009/04/03/article-clustering-in-weighted-networks/
+      tnets <- lapply(gr, lapply, function(x) {
+        tnet <- cbind(as_edgelist(x), edge_attr(x)$weight)
+        colnames(tnet) <- c("i", "j", "w")
+        tnet
+      })
     }
     )
+
+  if (!is.null(add.metrics)) {
+    for (n in names(add.metrics)) {
+      met <- add.metrics[[n]]
+      met_all[[n]] <- met
+
+      met_out <- met_regress(met, bat, net.cov, net_lab = n,
+                             labs = labs, kw.p = kw.p)
+      lm_all[[n]] <- met_out$lm.met
+      all_cov <- c(all_cov, list(met_out$out.p))
+      all_site <- c(all_site, met_out$bat.p)
+    }
+  }
 
   net_res_site <- do.call(cbind, all_site)
   rownames(net_res_site) <- labs
