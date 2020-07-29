@@ -1,23 +1,33 @@
-# Method first implemented by Yu et al. (2018), DOI: 10.1002/hbm.24241
-# Apply ComBat to Fisher-transformed lower triangular elements
-
 #' Functional connectivity CovBat
 #'
-#' @param x
-#' @param bat
-#' @param mod
-#' @param to.corr
-#' @param out.pd
+#' Applies CovBat to vectorized covariance or correlation matrices.
+#'
+#' @param x *p x p x n* covariance or correlation matrix where *p* is the number
+#'   of ROIs and *n* is the number of features
+#' @param bat Factor (or object coercible by \link[base]{as.factor} to a
+#'    factor) of length *n* designating batch IDs.
+#' @param mod Optional design matrix of covariates to preserve, usually from
+#'   the output of \link[stats]{model.matrix}.
+#' @param eb If `TRUE``, uses ComBat model with empirical Bayes for mean
+#'   and variance harmonization.
+#' @param to.corr If `TRUE`, uses \link[stats]{cov2cor} to convert input
+#'   matrices into correlation matrices
+#' @param out.pd Whether input should be forced to be positive definite using
+#'   \link[Matrix]{nearPD}. This step is unnecessary for many downstream
+#'   network analyses so defaults to `FALSE`.
+#' @param fisher Whether to Fisher-transform the off-diagonal elements before
+#'   applying CovBat, highly recommended that this be set to `TRUE`.
 #'
 #' @return
 #' @import CovBat
 #' @export
 #'
 #' @examples
-fcCovBat =  function(x, bat, eb = TRUE, mod = NULL, to.corr = TRUE,
+fcCovBat =  function(x, bat, mod = NULL, eb = TRUE, to.corr = TRUE,
                      out.pd = FALSE, fisher = TRUE) {
   N <- dim(x)[3]
   dnames <- dimnames(x)
+  bat <- as.factor(bat)
   bat <- droplevels(bat)
 
   if (to.corr) {x <- array(apply(x, 3, cov2cor), dim(x))}
