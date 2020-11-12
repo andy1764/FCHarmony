@@ -7,19 +7,39 @@
 fcCovBat(
   x,
   bat,
-  eb = TRUE,
   mod = NULL,
+  eb = TRUE,
   to.corr = TRUE,
   out.pd = FALSE,
   fisher = TRUE
 )
 }
 \arguments{
-\item{out.pd}{}
+\item{x}{\emph{p x p x n} covariance or correlation matrix where \emph{p} is the number
+of ROIs and \emph{n} is the number of features}
+
+\item{bat}{Factor (or object coercible by \link[base]{as.factor} to a
+factor) of length \emph{n} designating batch IDs.}
+
+\item{mod}{Optional design matrix of covariates to preserve, usually from
+the output of \link[stats]{model.matrix}.}
+
+\item{eb}{If `TRUE``, uses ComBat model with empirical Bayes for mean
+and variance harmonization.}
+
+\item{to.corr}{If \code{TRUE}, uses \link[stats]{cov2cor} to convert input
+matrices into correlation matrices}
+
+\item{out.pd}{Whether input should be forced to be positive definite using
+\link[Matrix]{nearPD}. This step is unnecessary for many downstream
+network analyses so defaults to \code{FALSE}.}
+
+\item{fisher}{Whether to Fisher-transform the off-diagonal elements before
+applying CovBat, highly recommended that this be set to \code{TRUE}.}
 }
 \value{
 
 }
 \description{
-Functional connectivity CovBat
+Applies CovBat to vectorized covariance or correlation matrices.
 }
