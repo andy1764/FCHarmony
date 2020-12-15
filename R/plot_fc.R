@@ -36,26 +36,39 @@ plot_fc <- function(cov, lims = c(-max(abs(cov)), max(abs(cov))),
   dat <- cov # avoids problems with modification of cov changing the arguments
   dimnames(dat) <- list(NULL, NULL)
 
+  if (!is.null(subgraphs)) {
+    sub <- subgraphs
+    dat <- dat[order(sub), order(sub)]
+    cov_melt <- melt(dat)
+    sub <- sub[order(sub)]
+    xmin <- sapply(unique(sub), function(x) min(which(sub == x)))-.5
+    xmax <- sapply(unique(sub), function(x) max(which(sub == x)))+.5
+    Subgraph <- unique(sub)
+
+    # for plotting rectangles
+    rect_df <- data.frame(xmin, xmax, Subgraph)
+  }
+
   # p-value transformations/binarization
   if (p.val) {
     colors <- c("white", "blue")
 
-    p_mat <- cov
+    p_mat <- dat
     if (diag) {
-      p <- p.adjust(cov[lower.tri(cov, diag = diag)], method = p.method)
+      p <- p.adjust(dat[lower.tri(dat, diag = diag)], method = p.method)
       p_mat[] <- 0
       p_mat[lower.tri(p_mat, diag = diag)] <- p
       p_mat <- p_mat + t(p_mat)
       diag(p_mat) <- diag(p_mat)/2
     } else {
-      p <- p.adjust(cov[lower.tri(cov)], method = p.method)
+      p <- p.adjust(dat[lower.tri(dat)], method = p.method)
       p_mat[] <- 0
       p_mat[lower.tri(p_mat)] <- p
       p_mat <- p_mat + t(p_mat)
       diag(p_mat) <- 1
     }
 
-    if (log.p) {dat <- -log(cov)}
+    if (log.p) {dat <- -log(dat)}
     if (binary) {dat[] <- as.numeric(p_mat < alpha)} # threshold for sig
   } else {
     colors <- c("red", "white", "blue")
@@ -64,13 +77,13 @@ plot_fc <- function(cov, lims = c(-max(abs(cov)), max(abs(cov))),
   cov_melt <- melt(dat)
 
   # Calculate p-value cutoffs
-  if (is.null(alpha) | !p.val) {
-    cov_melt$stars <- ""
-  } else {
+  if (p.val) {
     dimnames(p_mat) <- list(NULL, NULL)
     p_melt <- melt(p_mat)
     stars <- cut(p_melt$value, breaks = c(0, alpha, 1), label=c("+",""))
     cov_melt$stars <- stars
+  } else {
+    cov_melt$stars <- ""
   }
 
   if (is.null(subgraphs)) {
@@ -87,17 +100,6 @@ plot_fc <- function(cov, lims = c(-max(abs(cov)), max(abs(cov))),
             axis.text.x = element_blank(),
             axis.text.y = element_blank())
   } else {
-    sub <- subgraphs
-    dat <- dat[order(sub), order(sub)]
-    cov_melt <- melt(dat)
-    sub <- sub[order(sub)]
-    xmin <- sapply(unique(sub), function(x) min(which(sub == x)))-.5
-    xmax <- sapply(unique(sub), function(x) max(which(sub == x)))+.5
-    Subgraph <- unique(sub)
-
-    # for plotting rectangles
-    rect_df <- data.frame(xmin, xmax, Subgraph)
-
     ggplot(data = cov_melt) +
       geom_tile(aes(x=Var1, y=Var2, fill=value)) +
       do.call(geom_text, args = c(bin.param,
