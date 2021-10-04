@@ -16,6 +16,7 @@
 #' @param diag Whether to plot diagonal elements.
 #' @param log.p Apply negative log-transformation to p-values, overridden by
 #'   `binary = TRUE`.
+#' @param starchar Which character to use for annotating significant elements.
 #' @param bin.param List of graphical parameters passed to
 #'   \link[ggplot2]{geom_text}
 #' @param rect.param List of graphical parameters passed to
@@ -30,7 +31,7 @@
 plot_fc <- function(cov, lims = c(-max(abs(cov)), max(abs(cov))),
                     subgraphs = dimnames(cov)[[1]], p.val = FALSE,
                     p.method = "BH", alpha = 0.05, binary = FALSE,
-                    diag = FALSE, log.p = FALSE,
+                    diag = FALSE, log.p = FALSE, starchar = "+",
                     bin.param = list(color = "red", size = 2.5),
                     rect.param = list(alpha = 0, size = 1.25)) {
   dat <- cov # avoids problems with modification of cov changing the arguments
@@ -80,7 +81,7 @@ plot_fc <- function(cov, lims = c(-max(abs(cov)), max(abs(cov))),
   if (p.val) {
     dimnames(p_mat) <- list(NULL, NULL)
     p_melt <- melt(p_mat)
-    stars <- cut(p_melt$value, breaks = c(0, alpha, 1), label=c("+",""))
+    stars <- cut(p_melt$value, breaks = c(0, alpha, 1), label=c(starchar,""))
     cov_melt$stars <- stars
   } else {
     cov_melt$stars <- ""
