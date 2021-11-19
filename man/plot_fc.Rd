@@ -14,6 +14,7 @@ plot_fc(
   binary = FALSE,
   diag = FALSE,
   log.p = FALSE,
+  starchar = "+",
   bin.param = list(color = "red", size = 2.5),
   rect.param = list(alpha = 0, size = 1.25)
 )
@@ -40,6 +41,8 @@ names.}
 
 \item{log.p}{Apply negative log-transformation to p-values, overridden by
 \code{binary = TRUE}.}
+
+\item{starchar}{Which character to use for annotating significant elements.}
 
 \item{bin.param}{List of graphical parameters passed to
 \link[ggplot2]{geom_text}}

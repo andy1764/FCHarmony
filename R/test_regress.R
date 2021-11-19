@@ -1,12 +1,27 @@
-#' Title
+#' Regression tests
 #'
-#' @param ...
-#' @param bat
-#' @param mod
-#' @param labs
-#' @param tests
-#' @param seed.roi
-#' @param to.corr
+#' Examine if harmonization affects batch and covariate associations. Options to
+#' regress edge weights and mean edge weights within and between subnetworks.
+#'
+#' @param ... *p x p x n* covariance or correlation matrices where *p* is the number
+#'   of ROIs and *n* is the number of subjects. These are generally
+#'   unharmonized or harmonized datasets and should have the same dimensions.
+#' @param bat Factor (or object coercible by \link[base]{as.factor} to a
+#'    factor) of length *n* designating batch IDs.
+#' @param mod Optional design matrix of covariates to regress on, usually from
+#'   the output of \link[stats]{model.matrix}.
+#' @param roi.names Vector of names for regions of interest. For "Group" tests,
+#'   `roi.names` defines subnetworks of interest. If `NULL`, the dimension
+#'   names of each dataset are used.
+#' @param labs Vector of labels for the harmonization methods, in order of the
+#'   inputted datasets.
+#' @param tests Vector of tests to apply. "Elem" refers to regression on each
+#'   edge weight. "Group" refers to regression on mean edge weights within and
+#'   between each subnetwork, as defined by `roi.names`.
+#' @param fisher Whether to z-transform input FC matrices
+#' @param to.corr Logical, whether input should
+#'   be forced to be a correlation matrix using  \link[stats]{cov2cor}
+#' @param debug Whether to return intermediate objects for debugging
 #'
 #' @return
 #' @export
@@ -14,10 +29,10 @@
 #' @examples
 test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
                       labs = c("Raw", "Out"),
-                      tests = c("Elem", "Group", "CPC"),
-                      cpc.k = 15,
+                      tests = c("Elem", "Group"),
                       fisher = TRUE,
-                      seed.roi = NULL, to.corr = FALSE, debug = FALSE) {
+                      to.corr = FALSE,
+                      debug = FALSE) {
   dat <- list(...)
   L <- length(dat)
 
@@ -98,8 +113,6 @@ test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
 
       out$elem.p <- cov_p_mat
     },
-    # TODO: Group test is still very preliminary, boils down to being a
-    # within and between connectivity test
     "Group" = {
       grp_rois <- sort(unique(dimnames(dat[[1]])[[1]]))
       grp_rois <- list(grp_rois, grp_rois)
@@ -142,38 +155,6 @@ test_regress <- function(..., bat = NULL, mod = NULL, roi.names = NULL,
       }
 
       out$group.p <- grp_p_mat
-    },
-    "CPC" = {
-      all_cpc <- lapply(dat, cpc, k = cpc.k)
-      cpc_reg <- lapply(all_cpc, function(x) {
-        lapply(1:dim(x$D)[1], function(y) {
-          glm(x$D[y,] ~ mod, family = gaussian(link = "log"))
-        })
-      })
-      if (!is.null(bat)) {
-        cpc_reg_bat <- lapply(all_cpc, function(x) {
-          lapply(1:dim(x$D)[1], function(y) {
-            glm(x$D[y,] ~ design, family = gaussian(link = "log"))
-          })
-        })
-        bat_p <- lapply(unique(names(dat)), function(x)
-          sapply(1:length(cpc_reg[[x]]), function(y)
-            anova(cpc_reg[[x]][[y]],
-                  cpc_reg_bat[[x]][[y]], test = "LRT")$`Pr(>Chi)`[2]))
-        names(bat_p) <- names(dat)
-        cpc_reg <- cpc_reg_bat
-        cpc_bat <- bat_p
-      }
-
-      cpc_p <- lapply(cpc_reg, lapply,
-                      function(x) summary(x)$coefficients[-1,4])
-      cpc_p_mat <- lapply(cpc_p, function(x)
-        matrix(do.call(rbind, x), length(x), length(mods),
-               dimnames = list(1:length(x), mods)))
-
-      out$cpcs <- all_cpc
-      out$cpc.p <- cpc_p_mat
-      out$cpc.bat <- cpc_bat
     }
   )
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_regress.R
 \name{test_regress}
 \alias{test_regress}
-\title{Title}
+\title{Regression tests}
 \usage{
 test_regress(
   ...,
@@ -10,20 +10,45 @@ test_regress(
   mod = NULL,
   roi.names = NULL,
   labs = c("Raw", "Out"),
-  tests = c("Elem", "Group", "CPC"),
-  cpc.k = 15,
+  tests = c("Elem", "Group"),
   fisher = TRUE,
-  seed.roi = NULL,
   to.corr = FALSE,
   debug = FALSE
 )
 }
 \arguments{
-\item{to.corr}{}
+\item{...}{\emph{p x p x n} covariance or correlation matrices where \emph{p} is the number
+of ROIs and \emph{n} is the number of subjects. These are generally
+unharmonized or harmonized datasets and should have the same dimensions.}
+
+\item{bat}{Factor (or object coercible by \link[base]{as.factor} to a
+factor) of length \emph{n} designating batch IDs.}
+
+\item{mod}{Optional design matrix of covariates to regress on, usually from
+the output of \link[stats]{model.matrix}.}
+
+\item{roi.names}{Vector of names for regions of interest. For "Group" tests,
+\code{roi.names} defines subnetworks of interest. If \code{NULL}, the dimension
+names of each dataset are used.}
+
+\item{labs}{Vector of labels for the harmonization methods, in order of the
+inputted datasets.}
+
+\item{tests}{Vector of tests to apply. "Elem" refers to regression on each
+edge weight. "Group" refers to regression on mean edge weights within and
+between each subnetwork, as defined by \code{roi.names}.}
+
+\item{fisher}{Whether to z-transform input FC matrices}
+
+\item{to.corr}{Logical, whether input should
+be forced to be a correlation matrix using  \link[stats]{cov2cor}}
+
+\item{debug}{Whether to return intermediate objects for debugging}
 }
 \value{
 
 }
 \description{
-Title
+Examine if harmonization affects batch and covariate associations. Options to
+regress edge weights and mean edge weights within and between subnetworks.
 }

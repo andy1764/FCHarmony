@@ -1,14 +1,24 @@
-#' Experimental method for harmonization while accounting for subnetworks
+#' Method for harmonization while accounting for subnetworks
 #'
 #' Global ComBat followed by within-block ComBat
 #'
-#' @param x
-#' @param bat
-#' @param mod
+#' @param x *p x p x n* covariance or correlation matrices where *p* is the number
+#'   of ROIs and *n* is the number of subjects.
+#' @param bat Factor (or object coercible by \link[base]{as.factor} to a
+#'    factor) of length *n* designating batch IDs.
+#' @param mod Optional design matrix of covariates to preserve, usually from
+#'   the output of \link[stats]{model.matrix}.
+#' @param eb If `TRUE``, uses ComBat model with empirical Bayes for mean
+#'   and variance harmonization.
 #' @param blocks Blocks indicating submatrices that are harmonized in the
 #'   second-stage ComBat. Defaults to input dimension names.
-#' @param to.corr
-#' @param out.pd
+#' @param to.corr If `TRUE`, uses \link[stats]{cov2cor} to convert input
+#'   matrices into correlation matrices
+#' @param out.pd Whether input should be forced to be positive definite using
+#'   \link[Matrix]{nearPD}. This step is unnecessary for many downstream
+#'   network analyses so defaults to `FALSE`.
+#' @param fisher Whether to Fisher-transform the off-diagonal elements before
+#'   applying CovBat, highly recommended that this be set to `TRUE`.
 #'
 #' @return
 #' @export

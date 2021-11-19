@@ -2,8 +2,8 @@
 #'
 #' Applies CovBat to vectorized covariance or correlation matrices.
 #'
-#' @param x *p x p x n* covariance or correlation matrix where *p* is the number
-#'   of ROIs and *n* is the number of features
+#' @param x *p x p x n* covariance or correlation matrices where *p* is the number
+#'   of ROIs and *n* is the number of subjects.
 #' @param bat Factor (or object coercible by \link[base]{as.factor} to a
 #'    factor) of length *n* designating batch IDs.
 #' @param mod Optional design matrix of covariates to preserve, usually from

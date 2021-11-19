@@ -2,7 +2,7 @@
 % Please edit documentation in R/blComBat.R
 \name{blComBat}
 \alias{blComBat}
-\title{Experimental method for harmonization while accounting for subnetworks}
+\title{Method for harmonization while accounting for subnetworks}
 \usage{
 blComBat(
   x,
@@ -16,10 +16,30 @@ blComBat(
 )
 }
 \arguments{
+\item{x}{\emph{p x p x n} covariance or correlation matrices where \emph{p} is the number
+of ROIs and \emph{n} is the number of subjects.}
+
+\item{bat}{Factor (or object coercible by \link[base]{as.factor} to a
+factor) of length \emph{n} designating batch IDs.}
+
+\item{mod}{Optional design matrix of covariates to preserve, usually from
+the output of \link[stats]{model.matrix}.}
+
 \item{blocks}{Blocks indicating submatrices that are harmonized in the
 second-stage ComBat. Defaults to input dimension names.}
 
-\item{out.pd}{}
+\item{eb}{If `TRUE``, uses ComBat model with empirical Bayes for mean
+and variance harmonization.}
+
+\item{to.corr}{If \code{TRUE}, uses \link[stats]{cov2cor} to convert input
+matrices into correlation matrices}
+
+\item{out.pd}{Whether input should be forced to be positive definite using
+\link[Matrix]{nearPD}. This step is unnecessary for many downstream
+network analyses so defaults to \code{FALSE}.}
+
+\item{fisher}{Whether to Fisher-transform the off-diagonal elements before
+applying CovBat, highly recommended that this be set to \code{TRUE}.}
 }
 \value{
 

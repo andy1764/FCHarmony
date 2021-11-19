@@ -15,8 +15,8 @@ fcCovBat(
 )
 }
 \arguments{
-\item{x}{\emph{p x p x n} covariance or correlation matrix where \emph{p} is the number
-of ROIs and \emph{n} is the number of features}
+\item{x}{\emph{p x p x n} covariance or correlation matrices where \emph{p} is the number
+of ROIs and \emph{n} is the number of subjects.}
 
 \item{bat}{Factor (or object coercible by \link[base]{as.factor} to a
 factor) of length \emph{n} designating batch IDs.}
