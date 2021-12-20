@@ -6,11 +6,12 @@
 
 **License**: Artistic License 2.0
 
-**References**: If you are using FC-ComBat, please cite the following paper
+**References**: If you are using FCHarmony, please cite the following papers:
 
-|       | Citation     | Paper Link
-| -------------  | -------------  | -------------  |
-| ComBat for functional connectivity    | Yu, Meichen, Kristin A. Linn, Philip A. Cook, Mary L. Phillips, Melvin McInnis, Maurizio Fava, Madhukar H. Trivedi, Myrna M. Weissman, Russell T. Shinohara, and Yvette I. Sheline. 2018. “Statistical Harmonization Corrects Site Effects in Functional Connectivity Measurements from Multi-Site FMRI Data.” Human Brain Mapping 39 (11): 4213–27. https://doi.org/10.1002/hbm.24241. | [Link](https://doi.org/10.1002/hbm.24241)|
+|       | Citation     |
+| -------------  | -------------  |
+| ComBat for functional connectivity    | Yu, M., Linn, K. A., Cook, P. A., Phillips, M. L., McInnis, M., Fava, M., Trivedi, M. H., Weissman, M. M., Shinohara, R. T., & Sheline, Y. I. (2018). Statistical harmonization corrects site effects in functional connectivity measurements from multi-site fMRI data. Human Brain Mapping, 39(11), 4213–4227. https://doi.org/10.1002/hbm.24241|
+| Block-ComBat and FC-CovBat    | Chen, A. A., Srinivasan, D., Pomponio, R., Fan, Y., Nasrallah, I. M., Resnick, S. M., Beason-Held, L. L., Davatzikos, C., Satterthwaite, T. D., Bassett, D. S., Shinohara, R. T., & Shou, H. (2021). Harmonizing Functional Connectivity Reduces Scanner Effects in Community Detection. https://doi.org/10.1101/2021.12.03.469269|
 
 ## Table of content
 - [1. Installation](#id-section1)
