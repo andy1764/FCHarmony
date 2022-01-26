@@ -10,6 +10,8 @@
 #'   the output of \link[stats]{model.matrix}.
 #' @param eb If `TRUE``, uses ComBat model with empirical Bayes for mean
 #'   and variance harmonization.
+#' @param percent.var Numeric. The number of harmonized principal component
+#'   scores is selected to explain this proportion of the variance.
 #' @param to.corr If `TRUE`, uses \link[stats]{cov2cor} to convert input
 #'   matrices into correlation matrices
 #' @param out.pd Whether input should be forced to be positive definite using
@@ -23,8 +25,8 @@
 #' @export
 #'
 #' @examples
-fcCovBat =  function(x, bat, mod = NULL, eb = TRUE, to.corr = TRUE,
-                     out.pd = FALSE, fisher = TRUE) {
+fcCovBat =  function(x, bat, mod = NULL, eb = TRUE, percent.var = 0.95,
+                     to.corr = TRUE, out.pd = FALSE, fisher = TRUE) {
   N <- dim(x)[3]
   dnames <- dimnames(x)
   bat <- as.factor(bat)
@@ -34,11 +36,11 @@ fcCovBat =  function(x, bat, mod = NULL, eb = TRUE, to.corr = TRUE,
 
   if (fisher) {
     vec <- atanh(t(apply(x, 3, function(m) c(m[lower.tri(m)]))))
-    cov_out <- covbat(t(vec), bat, mod = mod, eb = eb)
+    cov_out <- covbat(t(vec), bat, mod = mod, eb = eb, percent.var = percent.var)
     cov_dat <- tanh(t(cov_out$dat.covbat))
   } else {
     vec <- t(apply(x, 3, function(m) c(m[lower.tri(m)])))
-    cov_out <- covbat(t(vec), bat, mod = mod, eb = eb)
+    cov_out <- covbat(t(vec), bat, mod = mod, eb = eb, percent.var = percent.var)
     cov_dat <- t(cov_out$dat.covbat)
   }
 

@@ -9,6 +9,7 @@ fcCovBat(
   bat,
   mod = NULL,
   eb = TRUE,
+  percent.var = 0.95,
   to.corr = TRUE,
   out.pd = FALSE,
   fisher = TRUE
@@ -26,6 +27,9 @@ the output of \link[stats]{model.matrix}.}
 
 \item{eb}{If `TRUE``, uses ComBat model with empirical Bayes for mean
 and variance harmonization.}
+
+\item{percent.var}{Numeric. The number of harmonized principal component
+scores is selected to explain this proportion of the variance.}
 
 \item{to.corr}{If \code{TRUE}, uses \link[stats]{cov2cor} to convert input
 matrices into correlation matrices}
